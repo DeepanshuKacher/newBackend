@@ -1,0 +1,214 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Owner {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  firstName   String
+  middleName  String?
+  lastName    String
+  email       String       @unique
+  hash        String
+  restaurants Restaurant[]
+
+  createdAt DateTime @default(now())
+  updatedAd DateTime @updatedAt
+
+  defaultRestaurant Restaurant? @relation(name: "defaultRestaurant")
+}
+
+model Restaurant {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  state     String
+  city      String
+  latitude  Float
+  longitude Float
+
+  dishesh     Dish[]
+  dishSection DishSection[]
+
+  tables Table[]
+
+  waiters Waiter[]
+
+  chefs Chef[]
+
+  owner   Owner  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId String @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAd DateTime @updatedAt
+
+  restaurantSettingForWaiter RestaurantSettings_Waiter?
+
+  defaultOwner   Owner?  @relation(fields: [defaultOwnerId], references: [id], name: "defaultRestaurant")
+  defaultOwnerId String? @unique @db.ObjectId
+}
+
+model RestaurantSettings_Waiter {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  allowWaiterToClearSession Boolean @default(false)
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId String     @unique @db.ObjectId
+}
+
+model DishSection {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  sectionName String
+
+  dishesh Dish[]
+
+  Restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId String     @db.ObjectId
+}
+
+type AddOns {
+  name  String
+  price Int
+}
+
+model Dish {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  description      String?
+  imageUrl         String?
+  addOns           AddOns[]
+  FullLarge_Price  Int?
+  FullMedium_Price Int?
+  FullSmall_Price  Int?
+  HalfLarge_Price  Int?
+  HalfMedium_Price Int?
+  HalfSmall_Price  Int?
+  // use type price{} instead of FullLag....
+
+  available Boolean @default(true)
+
+  DishSection   DishSection @relation(fields: [dishSectionId], references: [id], onDelete: Cascade)
+  dishSectionId String      @db.ObjectId
+
+  Restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId String     @db.ObjectId
+
+  OrderData    OrderData[]
+  OrderForLogs OrderForLogs[]
+}
+
+model Table {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  prefix       String?
+  suffix       String?
+  startNumber  Int
+  endNumber    Int
+  Restaurant   Restaurant    @relation(fields: [restaurantId], references: [id])
+  restaurantId String        @db.ObjectId
+  SessionLogs  SessionLogs[]
+}
+
+model Waiter {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  // DOB          DateTime
+  DOJ          DateTime @default(now()) @db.Date
+  MobileNumber Int?
+  address      String?
+  // gender       Gender
+
+  passportPhoto String?
+  identityPhoto String?
+
+  verified  Boolean @default(false)
+  available Boolean @default(true)
+
+  Restaurant   Restaurant?    @relation(fields: [restaurantId], references: [id])
+  restaurantId String?        @db.ObjectId
+  OrderForLogs OrderForLogs[]
+  // AllowedOrderForLogs OrderForLogs[] @relation(name: "allowedId")
+}
+
+model Chef {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  // DOB          DateTime
+  DOJ          DateTime @default(now()) @db.Date
+  MobileNumber Int?
+  address      String?
+  // gender       Gender
+
+  passportPhoto String?
+  identityPhoto String?
+
+  verified  Boolean @default(false)
+  available Boolean @default(true)
+
+  Restaurant   Restaurant?    @relation(fields: [restaurantId], references: [id])
+  restaurantId String?        @db.ObjectId
+  OrderForLogs OrderForLogs[]
+}
+
+// order data
+enum DishSize {
+  Large
+  Medium
+  Small
+}
+
+model OrderData {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  dish   Dish   @relation(fields: [dishId], references: [id])
+  dishId String @db.ObjectId
+
+  DishSize DishSize
+
+  fullQuantity Int?
+  halfQuantity Int?
+
+  dateOfOrder DateTime @db.Date
+}
+
+model SessionLogs {
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
+  OrderForLogs OrderForLogs[]
+  tableNumber  Int
+  tableSection Table          @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  tableId      String         @db.ObjectId
+}
+
+model OrderForLogs {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  belongSession SessionLogs @relation(fields: [sessionLogsId], references: [id])
+  sessionLogsId String      @db.ObjectId
+
+  dish   Dish   @relation(fields: [dishId], references: [id])
+  dishId String @db.ObjectId
+
+  user_description String?
+
+  orderedBy Waiter @relation(fields: [waiterId], references: [id])
+  waiterId  String @db.ObjectId
+  // allowedBy Waiter? @relation(fields: [waiterId], references: [id], name: "allowedId")
+  // allowedId String? @db.ObjectId
+
+  size DishSize
+
+  fullQuantity Int?
+  halfQuantity Int?
+
+  chefAssign Chef   @relation(fields: [chefId], references: [id])
+  chefId     String @db.ObjectId
+
+  orderTimeStamp DateTime @db.Timestamp
+}
