@@ -43,7 +43,7 @@ export const redis_create_Functions = {
 
   restaurantRealtimeOrdersContainer: (restaurantId: string, orderId: string) =>
     redisClient
-      .LPUSH(
+      .RPUSH(
         redisConstants.restaurantRealtimeOrdersContainer_Today_Key(
           restaurantId,
         ),

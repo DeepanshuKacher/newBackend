@@ -2,10 +2,10 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
-} from '@nestjs/common';
-import { randomUUID } from 'crypto';
-import { JwtPayload_restaurantId } from 'src/Interfaces';
-import { CreateOrderDto } from 'src/orders/dto/create-order.dto';
+} from "@nestjs/common";
+import { randomUUID } from "crypto";
+import { JwtPayload_restaurantId } from "src/Interfaces";
+import { CreateOrderDto } from "src/orders/dto/create-order.dto";
 import {
   redis_create_Functions,
   constants,
@@ -13,9 +13,9 @@ import {
   redisConstants,
   redisClient,
   mqttPublish,
-} from 'src/useFullItems';
-import { CartToOrderDTO } from './dto/cart-to-order.dto';
-import { DeleteCartOrderDTO } from './dto/delete-cart-order.dto';
+} from "src/useFullItems";
+import { CartToOrderDTO } from "./dto/cart-to-order.dto";
+import { DeleteCartOrderDTO } from "./dto/delete-cart-order.dto";
 
 @Injectable()
 export class CartService {
@@ -105,7 +105,7 @@ export class CartService {
     dto: CartToOrderDTO,
   ) {
     const { cartOrder, tableNumber, tableSessionId, tableSectionId } = dto;
-    const orderKey: string[] = [];
+    const orderKeys: string[] = [];
 
     const selectedOrderPromis = [];
 
@@ -114,7 +114,7 @@ export class CartService {
     }
 
     for (let x of cartOrder) {
-      orderKey.push(redisConstants.orderKey(x));
+      orderKeys.push(redisConstants.orderKey(x));
     }
 
     const cartOrders = await redisGetFunction.cartSession(tableSessionId);
@@ -126,14 +126,14 @@ export class CartService {
 
     const pushOrderToTableSessionPromis = redisClient.RPUSH(
       redisConstants.sessionKey(tableSessionId),
-      orderKey,
+      orderKeys,
     );
 
-    const pushOrderToRestaurantContainerPromis = redisClient.LPUSH(
+    const pushOrderToRestaurantContainerPromis = redisClient.RPUSH(
       redisConstants.restaurantRealtimeOrdersContainer_Today_Key(
         payload.restaurantId,
       ),
-      orderKey,
+      orderKeys,
     );
     try {
       await Promise.all([
@@ -145,7 +145,7 @@ export class CartService {
 
       await redisClient.DEL(redisConstants.cartSessionKey(tableSessionId));
 
-      const newOrder = cartOrders.filter((item) => !orderKey.includes(item));
+      const newOrder = cartOrders.filter((item) => !orderKeys.includes(item));
 
       const selectedOrder = await Promise.all(selectedOrderPromis);
 

@@ -25,7 +25,9 @@ export const constants = {
   States: "States",
   IS_DEVELOPMENT: workEnvironment === NodeEnvironment.DEVELOPMENT,
   IS_PRODUCTION: workEnvironment === NodeEnvironment.PRODUCTION,
-
+  timeConstants: {
+    daysFromMilliSeconds: (days = 1) => days * 24 * 60 * 60 * 1000,
+  },
   cookieParser: getConfig("cookieParser"),
   modifyRestroURL,
   PORT: getConfig("PORT"),
@@ -51,9 +53,9 @@ export const constants = {
   InternalError: "Internal Server Error",
 
   objectURL: (restaurantId: string, name: string) =>
-    `${privateContstants.s3Endpoint}/${constants.s3Bucket}/${
-      restaurantId + "-" + name
-    }`,
+    `${privateContstants.s3Endpoint}/${
+      constants.s3Bucket
+    }/${privateContstants.objectKey(restaurantId, name)}`,
 
   workerTokenGenerator: () => {
     let chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
@@ -70,7 +72,8 @@ export const constants = {
 };
 
 export const privateContstants = {
-  objectKey: (restaurantId: string, name: string) => restaurantId + "-" + name,
+  objectKey: (restaurantId: string, name: string) =>
+    `${restaurantId}-${name}`.replace(/\s/g, "-").toLocaleLowerCase(),
   s3Endpoint: getConfig("s3Endpoint"),
   s3Region: getConfig("s3Region"),
   s3AccessKeyId: getConfig("s3AccessKeyId"),

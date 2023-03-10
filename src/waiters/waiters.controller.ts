@@ -57,7 +57,6 @@ export class WaitersController {
   @Public()
   @Get(":token")
   checkToken(@Param("token") token: string) {
-    console.log(token);
     return this.waitersService.checkToken(token);
   }
 

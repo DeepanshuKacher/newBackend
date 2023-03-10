@@ -1,4 +1,10 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import {
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateTableDto {
   @IsString()
@@ -7,10 +13,12 @@ export class CreateTableDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(1)
   prefix?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(1)
   suffix?: string;
 
   @IsInt()

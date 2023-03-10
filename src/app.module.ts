@@ -17,6 +17,7 @@ import { ChefsModule } from './chefs/chefs.module';
 import { CartModule } from './cart/cart.module';
 import { RestaurantSettingModule } from './restaurant-setting/restaurant-setting.module';
 import { FoodieModule } from './foodie/foodie.module';
+import { RestaurantsignupModule } from './restaurantsignup/restaurantsignup.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { FoodieModule } from './foodie/foodie.module';
     CartModule,
     RestaurantSettingModule,
     FoodieModule,
+    RestaurantsignupModule,
   ],
 })
 export class AppModule {}

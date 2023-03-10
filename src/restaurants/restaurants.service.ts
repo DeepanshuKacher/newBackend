@@ -2,14 +2,14 @@ import {
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
-} from "@nestjs/common";
-import { PrismaService } from "src/prisma/prisma.service";
-import { CreateRestaurantDto } from "./dto";
-import * as argon from "argon2";
-import type { Request, Response } from "express";
-import { constants, redisClient, cacheFunction } from "../useFullItems";
-import { AuthService } from "src/auth/auth.service";
-import { JwtPayload_restaurantId } from "src/Interfaces";
+} from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateRestaurantDto } from './dto';
+import * as argon from 'argon2';
+import type { Request, Response } from 'express';
+import { constants, redisClient, cacheFunction } from '../useFullItems';
+import { AuthService } from 'src/auth/auth.service';
+import { JwtPayload_restaurantId } from 'src/Interfaces';
 
 @Injectable()
 export class RestaurantsService {
@@ -18,7 +18,9 @@ export class RestaurantsService {
     private readonly authService: AuthService,
   ) {}
 
-  async create(userId: string, dto: CreateRestaurantDto) {
+  async create(request: Request, dto: CreateRestaurantDto) {
+    const userId = request.signedCookies[constants.sessionId];
+
     try {
       await this.prisma.restaurant.create({
         data: {
@@ -31,33 +33,33 @@ export class RestaurantsService {
         },
       });
 
-      return "OK";
+      return 'OK';
     } catch (error) {
       console.log({ error });
-      throw new InternalServerErrorException("Internal Server Error", {
+      throw new InternalServerErrorException('Internal Server Error', {
         cause: error,
       });
     }
   }
 
   async allStates() {
-    const data = cacheFunction("get", constants.States);
+    const data = cacheFunction('get', constants.States);
 
     if (data) return data;
 
     const allState = await redisClient.zRange(constants.States, 0, -1);
 
-    return cacheFunction("add", constants.States, allState);
+    return cacheFunction('add', constants.States, allState);
   }
 
   async allCities(stateName: string) {
-    const data = cacheFunction("get", stateName);
+    const data = cacheFunction('get', stateName);
 
     if (data) return data;
 
     const cities = redisClient.zRange(stateName, 0, -1);
 
-    return cacheFunction("add", stateName, cities);
+    return cacheFunction('add', stateName, cities);
   }
 
   async findAllRestaurants(request: Request) {
@@ -101,7 +103,7 @@ export class RestaurantsService {
         },
       });
 
-      if (payload?.userType === "Owner" || payload?.userId === "Manager") {
+      if (payload?.userType === 'Owner' || payload?.userId === 'Manager') {
         const restaurantPrivateInfo = this.prisma.restaurant.findUnique({
           where: { id: restaurantId },
           select: {
@@ -132,8 +134,8 @@ export class RestaurantsService {
           [restaurantInfo, restaurantPrivateInfo],
         );
 
-        restaurantDetails["waiters"] = restaurantPrivateDetails.waiters;
-        restaurantDetails["chefs"] = restaurantPrivateDetails.chefs;
+        restaurantDetails['waiters'] = restaurantPrivateDetails.waiters;
+        restaurantDetails['chefs'] = restaurantPrivateDetails.chefs;
         return restaurantDetails;
       }
 

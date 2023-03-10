@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from "@nestjs/common";
 import {
   constants,
@@ -62,7 +63,7 @@ export class FoodieService {
       signed: true,
       sameSite: "strict",
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: constants.timeConstants.daysFromMilliSeconds(100),
     });
     response.cookie(constants.sessionId, sessionUUID, {
       domain: constants.globalDomainForFoodie,
@@ -70,7 +71,7 @@ export class FoodieService {
       signed: true,
       sameSite: "strict",
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: constants.timeConstants.daysFromMilliSeconds(100),
     });
     response.cookie(constants.restaurantId, restaurantId, {
       domain: constants.globalDomainForFoodie,
@@ -78,7 +79,7 @@ export class FoodieService {
       signed: true,
       sameSite: "strict",
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: constants.timeConstants.daysFromMilliSeconds(100),
     });
 
     return constants.OK;
@@ -122,26 +123,27 @@ export class FoodieService {
             sectionName: true,
           },
         },
+        id: true,
       },
     });
-    try {
-      const [data, tableInfo] = await Promise.all([
-        dataPromis,
-        tableInfoPromis,
-      ]);
-
-      const selfInfo = {
-        sessionId,
-        tableSectionId: tableInfo.tableSectionId,
-        tableNumber: tableInfo.tableNumber,
-      };
-
-      return { jwtToken, selfInfo, data };
-    } catch (error) {
+    const [data, tableInfo] = await Promise.all([
+      dataPromis,
+      tableInfoPromis,
+    ]).catch((error) => {
       console.log(error);
       throw new InternalServerErrorException(constants.InternalError, {
         cause: error,
       });
-    }
+    });
+
+    if (!tableInfo) throw new NotFoundException();
+
+    const selfInfo = {
+      sessionId,
+      tableSectionId: tableInfo.tableSectionId,
+      tableNumber: tableInfo.tableNumber,
+    };
+
+    return { jwtToken, selfInfo, data };
   }
 }
