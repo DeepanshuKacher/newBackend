@@ -4,8 +4,8 @@ import { createClient, createCluster } from "redis";
 const config = new ConfigService();
 
 const client = createClient({
-  url: "redis://redis1.eatrofoods.com",
-  password: "2$7{-WO^d_aAsJW",
+  url: config.get("REDIS_URL"),
+  password: config.get("REDIS_PASSWORD"),
 });
 // const client = createCluster({
 //   rootNodes: [
