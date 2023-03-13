@@ -174,16 +174,6 @@ export class WaitersService {
     const { restaurantSettingForWaiter, city, dishesh, id, name, tables } =
       restaurantDetail.Restaurant;
 
-    console.log({
-      restaurantSettingForWaiter,
-      city,
-      dishesh,
-      id,
-      name,
-      tables,
-      accessToken,
-    });
-
     return {
       accessToken,
       restaurantDetail: {
