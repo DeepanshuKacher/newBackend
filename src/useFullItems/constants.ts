@@ -82,4 +82,5 @@ export const privateContstants = {
   JWT_SECRET: getConfig("JWT_SECRET"),
   REDIS_URL: getConfig("REDIS_URL"),
   REDIS_PASSWORD: getConfig("REDIS_PASSWORD"),
+  workEnvironment,
 };

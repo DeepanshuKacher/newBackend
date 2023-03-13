@@ -3,7 +3,7 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import * as cookieParser from "cookie-parser";
 import { redisClient } from "./useFullItems";
-import { constants } from "./useFullItems";
+import { constants, privateContstants } from "./useFullItems";
 import { randomUUID } from "crypto";
 
 async function bootstrap() {
@@ -42,7 +42,11 @@ async function bootstrap() {
   );
 
   await app.listen(constants.PORT, () =>
-    console.log("server is running on port " + constants.PORT),
+    console.log(
+      privateContstants.workEnvironment +
+        " server is running on port " +
+        constants.PORT,
+    ),
   );
 }
 bootstrap();
