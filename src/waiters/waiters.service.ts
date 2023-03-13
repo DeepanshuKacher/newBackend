@@ -105,15 +105,11 @@ export class WaitersService {
 
       const randomKey = constants.workerTokenGenerator();
 
-      await redisClient.SETEX(
-        randomKey,
-        constants.IS_DEVELOPMENT ? 60 * 60 : 60 * 15,
-        jwtPayload.access_token,
-      );
+      await redisClient.SETEX(randomKey, 5 * 60 * 60, jwtPayload.access_token);
 
       await this.mailService.sendMail(
         value2.email,
-        `One Time Token Id for waiter ${createWaiter.name} is ${randomKey} valid for 15 minutes`,
+        `One Time Token Id for waiter ${createWaiter.name} is ${randomKey} valid for 5 hours`,
       );
 
       return constants.OK;
@@ -177,7 +173,6 @@ export class WaitersService {
 
     const { restaurantSettingForWaiter, city, dishesh, id, name, tables } =
       restaurantDetail.Restaurant;
-
 
     return {
       accessToken,
