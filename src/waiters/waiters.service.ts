@@ -3,17 +3,17 @@ import {
   InternalServerErrorException,
   NotFoundException,
   UnprocessableEntityException,
-} from '@nestjs/common';
-import { JwtPayload_restaurantId } from 'src/Interfaces';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { S3ImagesService } from 'src/s3-images/s3-images.service';
-import { constants } from 'src/useFullItems';
-import { CreateWaiterDto } from './dto/create-waiter.dto';
-import { UpdateWaiterDto } from './dto/update-waiter.dto';
-import { redisClient } from '../useFullItems';
-import { AuthService } from 'src/auth/auth.service';
-import { UserType } from 'src/auth/dto';
-import { MailServiceService } from 'src/mail-service/mail-service.service';
+} from "@nestjs/common";
+import { JwtPayload_restaurantId } from "src/Interfaces";
+import { PrismaService } from "src/prisma/prisma.service";
+import { S3ImagesService } from "src/s3-images/s3-images.service";
+import { constants } from "src/useFullItems";
+import { CreateWaiterDto } from "./dto/create-waiter.dto";
+import { UpdateWaiterDto } from "./dto/update-waiter.dto";
+import { redisClient } from "../useFullItems";
+import { AuthService } from "src/auth/auth.service";
+import { UserType } from "src/auth/dto";
+import { MailServiceService } from "src/mail-service/mail-service.service";
 
 @Injectable()
 export class WaitersService {
@@ -119,7 +119,7 @@ export class WaitersService {
       return constants.OK;
     } catch (error) {
       console.log(error);
-      throw new InternalServerErrorException('Internal Server Error', {
+      throw new InternalServerErrorException("Internal Server Error", {
         cause: error,
       });
     }
@@ -162,7 +162,7 @@ export class WaitersService {
                 available: true,
               },
               orderBy: {
-                name: 'asc',
+                name: "asc",
               },
             },
             restaurantSettingForWaiter: {
@@ -175,10 +175,20 @@ export class WaitersService {
       },
     });
 
+    const { restaurantSettingForWaiter, city, dishesh, id, name, tables } =
+      restaurantDetail.Restaurant;
+
+
     return {
       accessToken,
-      restaurantDetail: restaurantDetail.Restaurant,
-      settings: restaurantDetail.Restaurant.restaurantSettingForWaiter,
+      restaurantDetail: {
+        city,
+        dishesh,
+        id,
+        name,
+        tables,
+      },
+      settings: restaurantSettingForWaiter,
     };
   }
 
