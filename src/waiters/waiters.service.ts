@@ -181,6 +181,7 @@ export class WaitersService {
       id,
       name,
       tables,
+      accessToken,
     });
 
     return {
