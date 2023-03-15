@@ -122,6 +122,8 @@ export class WaitersService {
   }
 
   async checkToken(token: string) {
+    console.log("working check token");
+
     const accessToken = await redisClient.GETDEL(token);
 
     if (!accessToken) throw new NotFoundException();
@@ -219,7 +221,7 @@ export class WaitersService {
 
       return constants.OK;
     } catch (error) {
-      if (constants.IS_DEVELOPMENT) console.log({ error });
+      console.log({ error });
       throw new InternalServerErrorException(constants.InternalError, {
         cause: error,
       });
