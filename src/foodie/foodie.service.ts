@@ -49,7 +49,7 @@ export class FoodieService {
       if (tableCurrentSessionId === redisConstants.sessionKey(sessionId)) {
         return constants.OK;
       } else {
-        throw new ForbiddenException();
+        return "Please Reload";
       }
     }
 
