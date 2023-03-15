@@ -204,7 +204,7 @@ export class ChefsService {
 
       return constants.OK;
     } catch (error) {
-      if (constants.IS_DEVELOPMENT) console.log({ error });
+      console.log({ error });
       throw new InternalServerErrorException(constants.InternalError, {
         cause: error,
       });
