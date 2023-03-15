@@ -43,6 +43,8 @@ export class FoodieService {
 
     const sessionId = request.signedCookies[constants.sessionId];
 
+    console.log({ sessionId, tableNumber });
+
     if (tableCurrentSessionId) {
       if (tableCurrentSessionId === redisConstants.sessionKey(sessionId)) {
         return constants.OK;
