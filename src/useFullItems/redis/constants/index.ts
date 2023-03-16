@@ -2,8 +2,8 @@ import { CronJob } from "cron";
 import { Order } from "../functions";
 
 const dayTrackerHOF_Function = () => {
-  const dayTracker: { today: string; yesterday: string | null } = {
-    today: new Date().toLocaleDateString(),
+  const dayTracker: { today: number; yesterday: number | null } = {
+    today: new Date().getDate(),
     yesterday: null,
   };
 
@@ -11,7 +11,7 @@ const dayTrackerHOF_Function = () => {
     "0 0 0 * * *",
     function () {
       dayTracker.yesterday = dayTracker.today;
-      dayTracker.today = new Date().toLocaleDateString();
+      dayTracker.today = new Date().getDate();
     },
     null,
     true,
