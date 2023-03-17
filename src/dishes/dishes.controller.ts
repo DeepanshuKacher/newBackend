@@ -21,7 +21,6 @@ import { DeleteDishDto } from './dto';
 import { CreateDishDto } from './dto/create-dish.dto';
 import { UpdateDishDto } from './dto/update-dish.dto';
 
-// @Public() // ----------------------uptill development
 @Controller('dishes')
 export class DishesController {
   constructor(private readonly dishesService: DishesService) {}

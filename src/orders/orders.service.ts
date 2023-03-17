@@ -92,7 +92,7 @@ export class OrdersService {
   }
 
   async findAll(payload: JwtPayload_restaurantId) {
-    const restaurantOrderPromisToday = redisClient.LRANGE(
+    const restaurantOrderPromisYesterday = redisClient.LRANGE(
       redisConstants.restaurantRealtimeOrdersContainer_Yesterday_Key(
         payload.restaurantId,
       ),
@@ -100,7 +100,7 @@ export class OrdersService {
       -1,
     );
 
-    const restaurantOrderPromisYesterday = redisClient.LRANGE(
+    const restaurantOrderPromisToday = redisClient.LRANGE(
       redisConstants.restaurantRealtimeOrdersContainer_Today_Key(
         payload.restaurantId,
       ),
@@ -108,11 +108,19 @@ export class OrdersService {
       -1,
     );
 
+    // console.log({
+    //   key: redisConstants.restaurantRealtimeOrdersContainer_Today_Key(
+    //     payload.restaurantId,
+    //   ),
+    // });
+
     const [restaurantOrderDataToday, restaurantOrderDataYesterday] =
       await Promise.all([
         restaurantOrderPromisToday,
         restaurantOrderPromisYesterday,
       ]);
+
+    // console.log({ restaurantOrderDataToday, restaurantOrderDataYesterday });
 
     const restaurantOrder = [
       ...restaurantOrderDataToday,
@@ -124,6 +132,8 @@ export class OrdersService {
     for (let x of restaurantOrder) {
       ordersPromis.push(redisClient.HGETALL(x));
     }
+
+    // console.log({ ordersPromis });
 
     return Promise.all(ordersPromis);
   }
