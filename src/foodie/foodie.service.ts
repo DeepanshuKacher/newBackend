@@ -33,6 +33,10 @@ export class FoodieService {
   ) {
     // add logic to check geo-location
 
+    console.log("device ip address", request.ip);
+    console.log("request.ips", request.ips);
+    console.log("request.socket.remoteAddress", request.socket.remoteAddress);
+
     const tableCurrentSessionId = await redisClient.HGET(
       redisConstants.tablesStatusKey(restaurantId),
       redisConstants.tableSessionKeyForTablesStatus(
@@ -49,7 +53,7 @@ export class FoodieService {
       if (tableCurrentSessionId === redisConstants.sessionKey(sessionId)) {
         return constants.OK;
       } else {
-        return "Please Reload";
+        return "Please Reload"; // this is vary important change to get foodie upon re-scanning I don't know how this works
       }
     }
 
@@ -99,6 +103,8 @@ export class FoodieService {
   async getJwt(request: Request) {
     const restaurantId = request.signedCookies[constants.restaurantId];
     const sessionId = request.signedCookies[constants.sessionId];
+
+    console.log({ restaurantId, sessionId });
 
     if (!restaurantId || !sessionId) throw new ForbiddenException();
 
