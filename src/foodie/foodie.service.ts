@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
@@ -33,13 +34,36 @@ export class FoodieService {
   ) {
     // add logic to check geo-location
 
-    const tableCurrentSessionId = await redisClient.HGET(
+    // checking it table exist or not
+    const tableInfoPromis = this.prisma.table.findUnique({
+      where: {
+        id: tableSectionId,
+      },
+      select: {
+        id: true,
+        endNumber: true,
+        startNumber: true,
+        restaurantId: true,
+      },
+    });
+
+    const tableCurrentSessionIdPromis = redisClient.HGET(
       redisConstants.tablesStatusKey(restaurantId),
       redisConstants.tableSessionKeyForTablesStatus(
         tableSectionId,
         tableNumber,
       ),
     );
+
+    const [tableCurrentSessionId, tableInfo] = await Promise.all([
+      tableCurrentSessionIdPromis,
+      tableInfoPromis,
+    ]);
+
+    //checking it table exist or not
+    if (!tableInfo) throw new NotFoundException();
+    if (tableInfo.restaurantId !== restaurantId) throw new ConflictException();
+    if (!(tableNumber >= tableInfo.startNumber && tableNumber <= tableInfo.endNumber)) throw new ConflictException();
 
     const sessionId = request.signedCookies[constants.sessionId];
 
@@ -98,7 +122,7 @@ export class FoodieService {
     const restaurantId = request.signedCookies[constants.restaurantId];
     const sessionId = request.signedCookies[constants.sessionId];
 
-    console.log({ restaurantId, sessionId });
+    // console.log({ restaurantId, sessionId });
 
     if (!restaurantId || !sessionId) throw new ForbiddenException();
 

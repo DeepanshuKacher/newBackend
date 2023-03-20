@@ -195,39 +195,39 @@ export class SessionsService {
       sessionId,
     );
 
-    const sessionLog = await this.prisma.sessionLogs.create({
-      data: {
-        tableNumber,
-        tableId: tableSectionId,
-      },
-      select: {
-        id: true,
-      },
-    });
+    // const sessionLog = await this.prisma.sessionLogs.create({
+    //   data: {
+    //     tableNumber,
+    //     tableId: tableSectionId,
+    //   },
+    //   select: {
+    //     id: true,
+    //   },
+    // });
 
-    const saveOrdersLogsToPrisma = this.prisma.orderForLogs.createMany({
-      data: orderObjects.map((item) => ({
-        chefId: item.chefAssign,
-        dishId: item.dishId,
-        sessionLogsId: sessionLog.id,
-        size: item.size,
-        waiterId: item.orderedBy,
-        fullQuantity: parseInt(item.fullQuantity),
-        halfQuantity: parseInt(item.halfQuantity),
-        user_description: item.user_description,
-        orderTimeStamp: item.createdAt,
-      })),
-    });
+    // const saveOrdersLogsToPrisma = this.prisma.orderForLogs.createMany({
+    //   data: orderObjects.map((item) => ({
+    //     chefId: item.chefAssign,
+    //     dishId: item.dishId,
+    //     sessionLogsId: sessionLog.id,
+    //     size: item.size,
+    //     waiterId: item.orderedBy,
+    //     fullQuantity: parseInt(item.fullQuantity),
+    //     halfQuantity: parseInt(item.halfQuantity),
+    //     user_description: item.user_description,
+    //     orderTimeStamp: item.createdAt,
+    //   })),
+    // });
 
-    const saveOrderDataToPrisma = this.prisma.orderData.createMany({
-      data: orderObjects.map((item) => ({
-        dateOfOrder: item.createdAt,
-        dishId: item.dishId,
-        DishSize: item.size,
-        fullQuantity: parseInt(item.fullQuantity),
-        halfQuantity: parseInt(item.halfQuantity),
-      })),
-    });
+    // const saveOrderDataToPrisma = this.prisma.orderData.createMany({
+    //   data: orderObjects.map((item) => ({
+    //     dateOfOrder: item.createdAt,
+    //     dishId: item.dishId,
+    //     DishSize: item.size,
+    //     fullQuantity: parseInt(item.fullQuantity),
+    //     halfQuantity: parseInt(item.halfQuantity),
+    //   })),
+    // });
 
     const detachSessionFromTable = redisClient.HDEL(
       redisConstants.tablesStatusKey(payload.restaurantId),
@@ -248,8 +248,8 @@ export class SessionsService {
         detachSessionFromTable,
         deleteSession,
         deleteCart,
-        saveOrdersLogsToPrisma,
-        saveOrderDataToPrisma,
+        // saveOrdersLogsToPrisma,
+        // saveOrderDataToPrisma,
       ]);
 
       mqttPublish.sessionStartConfirmation(

@@ -78,8 +78,19 @@ type AddOns {
   price Int
 }
 
+type QuantityPrice {
+  half Int?
+  full Int?
+}
+
+type SizePrice {
+  large  QuantityPrice?
+  medium QuantityPrice?
+  small  QuantityPrice?
+}
+
 model Dish {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  id               String     @id @default(auto()) @map("_id") @db.ObjectId
   name             String
   description      String?
   imageUrl         String?
@@ -90,7 +101,7 @@ model Dish {
   HalfLarge_Price  Int?
   HalfMedium_Price Int?
   HalfSmall_Price  Int?
-  // use type price{} instead of FullLag....
+  Price            SizePrice?
 
   available Boolean @default(true)
 
@@ -100,20 +111,20 @@ model Dish {
   Restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   restaurantId String     @db.ObjectId
 
-  OrderData    OrderData[]
-  OrderForLogs OrderForLogs[]
+  // OrderData    OrderData[]
+  // OrderForLogs OrderForLogs[]
 }
 
 model Table {
-  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
   name         String
   prefix       String?
   suffix       String?
   startNumber  Int
   endNumber    Int
-  Restaurant   Restaurant    @relation(fields: [restaurantId], references: [id])
-  restaurantId String        @db.ObjectId
-  SessionLogs  SessionLogs[]
+  Restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String     @db.ObjectId
+  // SessionLogs  SessionLogs[]
 }
 
 model Waiter {
@@ -131,9 +142,9 @@ model Waiter {
   verified  Boolean @default(false)
   available Boolean @default(true)
 
-  Restaurant   Restaurant?    @relation(fields: [restaurantId], references: [id])
-  restaurantId String?        @db.ObjectId
-  OrderForLogs OrderForLogs[]
+  Restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String     @db.ObjectId
+  // OrderForLogs OrderForLogs[]
   // AllowedOrderForLogs OrderForLogs[] @relation(name: "allowedId")
 }
 
@@ -152,9 +163,9 @@ model Chef {
   verified  Boolean @default(false)
   available Boolean @default(true)
 
-  Restaurant   Restaurant?    @relation(fields: [restaurantId], references: [id])
-  restaurantId String?        @db.ObjectId
-  OrderForLogs OrderForLogs[]
+  Restaurant   Restaurant? @relation(fields: [restaurantId], references: [id])
+  restaurantId String?     @db.ObjectId
+  // OrderForLogs OrderForLogs[]
 }
 
 // order data
@@ -164,51 +175,51 @@ enum DishSize {
   Small
 }
 
-model OrderData {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
+// model OrderData {
+//   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  dish   Dish   @relation(fields: [dishId], references: [id])
-  dishId String @db.ObjectId
+//   dish   Dish   @relation(fields: [dishId], references: [id])
+//   dishId String @db.ObjectId
 
-  DishSize DishSize
+//   DishSize DishSize
 
-  fullQuantity Int?
-  halfQuantity Int?
+//   fullQuantity Int?
+//   halfQuantity Int?
 
-  dateOfOrder DateTime @db.Date
-}
+//   dateOfOrder DateTime @db.Date
+// }
 
-model SessionLogs {
-  id           String         @id @default(auto()) @map("_id") @db.ObjectId
-  OrderForLogs OrderForLogs[]
-  tableNumber  Int
-  tableSection Table          @relation(fields: [tableId], references: [id], onDelete: Cascade)
-  tableId      String         @db.ObjectId
-}
+// model SessionLogs {
+//   id           String         @id @default(auto()) @map("_id") @db.ObjectId
+//   OrderForLogs OrderForLogs[]
+//   tableNumber  Int
+//   tableSection Table          @relation(fields: [tableId], references: [id], onDelete: Cascade)
+//   tableId      String         @db.ObjectId
+// }
 
-model OrderForLogs {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
+// model OrderForLogs {
+//   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  belongSession SessionLogs @relation(fields: [sessionLogsId], references: [id])
-  sessionLogsId String      @db.ObjectId
+//   belongSession SessionLogs @relation(fields: [sessionLogsId], references: [id])
+//   sessionLogsId String      @db.ObjectId
 
-  dish   Dish   @relation(fields: [dishId], references: [id])
-  dishId String @db.ObjectId
+//   dish   Dish   @relation(fields: [dishId], references: [id], onDelete: Cascade)
+//   dishId String @db.ObjectId
 
-  user_description String?
+//   user_description String?
 
-  orderedBy Waiter @relation(fields: [waiterId], references: [id])
-  waiterId  String @db.ObjectId
-  // allowedBy Waiter? @relation(fields: [waiterId], references: [id], name: "allowedId")
-  // allowedId String? @db.ObjectId
+//   orderedBy Waiter @relation(fields: [waiterId], references: [id])
+//   waiterId  String @db.ObjectId
+// allowedBy Waiter? @relation(fields: [waiterId], references: [id], name: "allowedId")
+// allowedId String? @db.ObjectId
 
-  size DishSize
+//   size DishSize
 
-  fullQuantity Int?
-  halfQuantity Int?
+//   fullQuantity Int?
+//   halfQuantity Int?
 
-  chefAssign Chef   @relation(fields: [chefId], references: [id])
-  chefId     String @db.ObjectId
+//   chefAssign Chef   @relation(fields: [chefId], references: [id])
+//   chefId     String @db.ObjectId
 
-  orderTimeStamp DateTime @db.Timestamp
-}
+//   orderTimeStamp DateTime @db.Timestamp
+// }
