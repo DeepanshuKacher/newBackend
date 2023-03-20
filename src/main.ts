@@ -17,27 +17,21 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
 
-  // if (constants.IS_PRODUCTION) {
-  //   app.enableCors({
-  //     origin: [
-  //       "https://eatrofoods.com",
-  //       /^https:[/]{2}[a-zA-Z-_0-9]+[.]eatrofoods.com$/,
-  //     ],
-  //     credentials: true,
-  //   });
-  // } else if (constants.IS_DEVELOPMENT) {
-  //   app.enableCors({
-  //     // origin: /^http:[/]{2}localhost:[0-9]{4}/,
-  //     origin: /http:[.]*/,
-  //     credentials: true,
-  //   });
-  // }
-
-  app.enableCors({
-    // origin: /^http:[/]{2}localhost:[0-9]{4}/,
-    origin: /http:[.]*/,
-    credentials: true,
-  });
+  if (constants.IS_PRODUCTION) {
+    app.enableCors({
+      origin: [
+        "https://eatrofoods.com",
+        /^https:[/]{2}[a-zA-Z-_0-9]+[.]eatrofoods.com$/,
+      ],
+      credentials: true,
+    });
+  } else if (constants.IS_DEVELOPMENT) {
+    app.enableCors({
+      // origin: /^http:[/]{2}localhost:[0-9]{4}/,
+      origin: /http:[.]*/,
+      credentials: true,
+    });
+  }
 
   app.use(cookieParser(constants.cookieParser));
 
