@@ -128,36 +128,41 @@ export class ChefsService {
     const values: JwtPayload_restaurantId =
       this.authService.jwtDecode(accessToken);
 
-    const restaurantDetail = await this.prisma.chef.update({
-      where: {
-        id: values.userId,
-      },
-      data: {
-        verified: true,
-      },
-      select: {
-        Restaurant: {
-          select: {
-            city: true,
-            name: true,
-            id: true,
-            tables: true,
-            dishesh: {
-              select: {
-                id: true,
-                name: true,
-                // available: true, it will be usefull in upcomming features
-              },
-              orderBy: {
-                name: "asc",
+    const restaurantDetail = await this.prisma.chef
+      .update({
+        where: {
+          id: values.userId,
+        },
+        data: {
+          verified: true,
+        },
+        select: {
+          Restaurant: {
+            select: {
+              city: true,
+              name: true,
+              id: true,
+              tables: true,
+              dishesh: {
+                select: {
+                  id: true,
+                  name: true,
+                  // available: true, it will be usefull in upcomming features
+                },
+                orderBy: {
+                  name: "asc",
+                },
               },
             },
           },
+          name: true,
+          id: true,
         },
-        name: true,
-        id: true,
-      },
-    });
+      })
+      .catch((error) => {
+        console.log(error);
+        throw new InternalServerErrorException();
+      });
 
     console.log({
       accessToken,

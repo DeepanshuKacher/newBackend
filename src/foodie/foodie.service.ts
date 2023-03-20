@@ -33,10 +33,6 @@ export class FoodieService {
   ) {
     // add logic to check geo-location
 
-    console.log("device ip address", request.ip);
-    console.log("request.ips", request.ips);
-    console.log("request.socket.remoteAddress", request.socket.remoteAddress);
-
     const tableCurrentSessionId = await redisClient.HGET(
       redisConstants.tablesStatusKey(restaurantId),
       redisConstants.tableSessionKeyForTablesStatus(
@@ -46,8 +42,6 @@ export class FoodieService {
     );
 
     const sessionId = request.signedCookies[constants.sessionId];
-
-    console.log({ sessionId, tableNumber });
 
     if (tableCurrentSessionId) {
       if (tableCurrentSessionId === redisConstants.sessionKey(sessionId)) {
