@@ -18,6 +18,7 @@ import { CartModule } from "./cart/cart.module";
 import { RestaurantSettingModule } from "./restaurant-setting/restaurant-setting.module";
 import { FoodieModule } from "./foodie/foodie.module";
 import { RestaurantsignupModule } from "./restaurantsignup/restaurantsignup.module";
+import { GlobalPrismaFunctionsModule } from "./global-prisma-functions/global-prisma-functions.module";
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { RestaurantsignupModule } from "./restaurantsignup/restaurantsignup.modu
     RestaurantSettingModule,
     FoodieModule,
     RestaurantsignupModule,
+    GlobalPrismaFunctionsModule,
   ],
 })
 export class AppModule {}

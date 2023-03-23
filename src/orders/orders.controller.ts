@@ -23,6 +23,11 @@ export class OrdersController {
     return this.ordersService.findAll(payload);
   }
 
+  @Get("logs")
+  getOrderLogs(@GetJwtPayload() payload: JwtPayload_restaurantId) {
+    return this.ordersService.getOrder_logs(payload);
+  }
+
   @Post()
   create(
     @Body() createOrderDto: CreateOrderDto,

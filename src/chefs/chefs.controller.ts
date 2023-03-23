@@ -20,6 +20,13 @@ import { UpdateChefDto } from "./dto/update-chef.dto";
 export class ChefsController {
   constructor(private readonly chefsService: ChefsService) {}
 
+  @Get("restaurantDetail")
+  getRestaurantDetail_for_chef(
+    @GetJwtPayload() payload: JwtPayload_restaurantId,
+  ) {
+    return this.chefsService.getRestaurantDetail_For_Chef(payload.userId);
+  }
+
   @Post()
   @UseInterceptors(
     FileFieldsInterceptor([
@@ -48,21 +55,6 @@ export class ChefsController {
   @Get(":token")
   checkToken(@Param("token") token: string) {
     return this.chefsService.checkToken(token);
-  }
-
-  @Get()
-  findAll() {
-    return this.chefsService.findAll();
-  }
-
-  @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.chefsService.findOne(+id);
-  }
-
-  @Patch(":id")
-  update(@Param("id") id: string, @Body() updateChefDto: UpdateChefDto) {
-    return this.chefsService.update(+id, updateChefDto);
   }
 
   @Delete(":id")

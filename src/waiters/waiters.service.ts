@@ -7,13 +7,14 @@ import {
 import { JwtPayload_restaurantId } from "src/Interfaces";
 import { PrismaService } from "src/prisma/prisma.service";
 import { S3ImagesService } from "src/s3-images/s3-images.service";
-import { constants } from "src/useFullItems";
+import { constants, privateContstants } from "src/useFullItems";
 import { CreateWaiterDto } from "./dto/create-waiter.dto";
 import { UpdateWaiterDto } from "./dto/update-waiter.dto";
 import { redisClient } from "../useFullItems";
 import { AuthService } from "src/auth/auth.service";
 import { UserType } from "src/auth/dto";
 import { MailServiceService } from "src/mail-service/mail-service.service";
+import { GlobalPrismaFunctionsService } from "src/global-prisma-functions/global-prisma-functions.service";
 
 @Injectable()
 export class WaitersService {
@@ -22,6 +23,7 @@ export class WaitersService {
     private readonly s3Images: S3ImagesService,
     private readonly authService: AuthService,
     private readonly mailService: MailServiceService,
+    private readonly prismaGlobalFunction: GlobalPrismaFunctionsService,
   ) {}
 
   async create(
@@ -121,9 +123,70 @@ export class WaitersService {
     }
   }
 
-  async checkToken(token: string) {
-    console.log("working check token");
+  async getRestaurantDetail_For_Waiter(waiterMongoId: string) {
+    const data = await this.prisma.waiter.findUnique({
+      where: {
+        id: waiterMongoId,
+      },
+      select: {
+        Restaurant: {
+          select: {
+            city: true,
+            name: true,
+            id: true,
+            tables: true,
+            dishesh: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                addOns: true,
+                FullLarge_Price: true,
+                FullMedium_Price: true,
+                FullSmall_Price: true,
+                HalfLarge_Price: true,
+                HalfMedium_Price: true,
+                HalfSmall_Price: true,
+                available: true,
+              },
+              orderBy: {
+                name: "asc",
+              },
+            },
+            restaurantSettingForWaiter: {
+              select: {
+                allowWaiterToClearSession: true,
+              },
+            },
+          },
+        },
+        name: true,
+        id: true,
+      },
+    });
 
+    if (data === null)
+      return {
+        settings: "clear",
+      };
+
+    const { restaurantSettingForWaiter, city, dishesh, id, name, tables } =
+      data?.Restaurant;
+
+    return {
+      restaurantDetail: {
+        city,
+        dishesh,
+        id,
+        name,
+        tables,
+      },
+      settings: restaurantSettingForWaiter,
+      selfDetail: { name: data.name, id: data.id },
+    };
+  }
+
+  async checkToken(token: string) {
     const accessToken = await redisClient.GETDEL(token);
 
     if (!accessToken) throw new NotFoundException();
@@ -131,7 +194,7 @@ export class WaitersService {
     const values: JwtPayload_restaurantId =
       this.authService.jwtDecode(accessToken);
 
-    const restaurantDetail = await this.prisma.waiter.update({
+    const returnData = await this.prisma.waiter.update({
       where: {
         id: values.userId,
       },
@@ -170,11 +233,13 @@ export class WaitersService {
             },
           },
         },
+        name: true,
+        id: true,
       },
     });
 
     const { restaurantSettingForWaiter, city, dishesh, id, name, tables } =
-      restaurantDetail.Restaurant;
+      returnData.Restaurant;
 
     return {
       accessToken,
@@ -186,19 +251,8 @@ export class WaitersService {
         tables,
       },
       settings: restaurantSettingForWaiter,
+      selfDetail: { name: returnData.name, id: returnData.id },
     };
-  }
-
-  findAll() {
-    return `This action returns all waiters`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} waiter`;
-  }
-
-  update(id: number, updateWaiterDto: UpdateWaiterDto) {
-    return `This action updates a #${id} waiter`;
   }
 
   async remove(id: string, payload: JwtPayload_restaurantId) {
@@ -213,11 +267,18 @@ export class WaitersService {
         constants.workerIdentityPhoto(id),
       );
 
-      await this.prisma.waiter.delete({
+      const changeCommitIdPromis =
+        this.prismaGlobalFunction.updateRestaurantCommitUUID(
+          payload.restaurantId,
+        );
+
+      const deleteWaiterPromis = this.prisma.waiter.delete({
         where: {
           id,
         },
       });
+
+      await Promise.all([changeCommitIdPromis, deleteWaiterPromis]);
 
       return constants.OK;
     } catch (error) {
@@ -226,5 +287,16 @@ export class WaitersService {
         cause: error,
       });
     }
+  }
+
+  getLogs(payload: JwtPayload_restaurantId) {
+    return this.prisma.waiter.findUnique({
+      where: {
+        id: payload.userId,
+      },
+      select: {
+        Order_Logs: true,
+      },
+    });
   }
 }

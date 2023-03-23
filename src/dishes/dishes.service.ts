@@ -1,18 +1,20 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { CreateDishDto } from './dto/create-dish.dto';
-import { UpdateDishDto } from './dto/update-dish.dto';
-import { constants } from 'src/useFullItems';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { JwtPayload_restaurantId } from 'src/Interfaces';
-import { DeleteDishDto } from './dto';
-import { S3ImagesService } from 'src/s3-images/s3-images.service';
-import { Dish } from '@prisma/client';
+import { Injectable, InternalServerErrorException } from "@nestjs/common";
+import { CreateDishDto } from "./dto/create-dish.dto";
+import { UpdateDishDto } from "./dto/update-dish.dto";
+import { constants } from "src/useFullItems";
+import { PrismaService } from "src/prisma/prisma.service";
+import { JwtPayload_restaurantId } from "src/Interfaces";
+import { DeleteDishDto } from "./dto";
+import { S3ImagesService } from "src/s3-images/s3-images.service";
+import { Dish } from "@prisma/client";
+import { GlobalPrismaFunctionsService } from "src/global-prisma-functions/global-prisma-functions.service";
 
 @Injectable()
 export class DishesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly s3Images: S3ImagesService,
+    private readonly globalPrismaFunctions: GlobalPrismaFunctionsService,
   ) {}
 
   async createBulkDish(data: Dish[]) {
@@ -24,13 +26,22 @@ export class DishesService {
   async create_bulkDish_withoutImage() {}
 
   async createDish(dto: CreateDishDto, restaurantId: string, image?: string) {
-    return await this.prisma.dish.create({
+    const updateCommitIdPromis =
+      this.globalPrismaFunctions.updateRestaurantCommitUUID(restaurantId);
+    const createDishPromis = this.prisma.dish.create({
       data: {
         ...dto,
         restaurantId,
         imageUrl: image,
       },
     });
+
+    const [updateCommitId, createDish] = await Promise.all([
+      updateCommitIdPromis,
+      createDishPromis,
+    ]);
+
+    return createDish;
   }
 
   async create_with_image(
@@ -47,7 +58,7 @@ export class DishesService {
       return constants.OK;
     } catch (error) {
       if (constants.IS_DEVELOPMENT) console.log(error);
-      throw new InternalServerErrorException('Internal Server Error', {
+      throw new InternalServerErrorException("Internal Server Error", {
         cause: error,
       });
     }
@@ -59,7 +70,7 @@ export class DishesService {
   ) {
     await this.createDish(dto, payload.restaurantId);
 
-    return 'OK';
+    return "OK";
   }
 
   async getSectionDishesh(sectionId: string) {
@@ -76,10 +87,16 @@ export class DishesService {
 
   async update(id: string, updateDishDto: UpdateDishDto) {
     try {
-      await this.prisma.dish.update({
+      const data = await this.prisma.dish.update({
         where: { id },
         data: { ...updateDishDto },
+        select: {
+          restaurantId: true,
+        },
       });
+      await this.globalPrismaFunctions.updateRestaurantCommitUUID(
+        data.restaurantId,
+      );
 
       return constants.OK;
     } catch (error) {
@@ -101,7 +118,12 @@ export class DishesService {
         body.name,
       );
 
-      await Promise.all([deleteDish, deleteImage]);
+      const updateCommitIdPromis =
+        this.globalPrismaFunctions.updateRestaurantCommitUUID(
+          payload.restaurantId,
+        );
+
+      await Promise.all([deleteDish, deleteImage, updateCommitIdPromis]);
 
       return constants.OK;
     } catch (error) {

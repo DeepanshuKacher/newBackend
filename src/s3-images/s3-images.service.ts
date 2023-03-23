@@ -25,7 +25,6 @@ export class S3ImagesService {
 
   createImage(name: string, restaurantId: string, file: Express.Multer.File) {
     try {
-      console.log("image uploaded");
 
       const bucketParams: PutObjectCommandInput = {
         Bucket: constants.s3Bucket,
@@ -42,7 +41,6 @@ export class S3ImagesService {
 
   deleteImage(restaurantId: string, name: string) {
     try {
-      console.log("object deleted");
       this.s3Client.deleteObject({
         Bucket: constants.s3Bucket,
         Key: privateContstants.objectKey(restaurantId, name),

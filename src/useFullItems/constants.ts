@@ -83,4 +83,6 @@ export const privateContstants = {
   REDIS_URL: getConfig("REDIS_URL"),
   REDIS_PASSWORD: getConfig("REDIS_PASSWORD"),
   workEnvironment,
+  updateToken: "updateToken",
+  clearData: "clearData",
 };

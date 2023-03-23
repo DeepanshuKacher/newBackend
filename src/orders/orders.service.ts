@@ -16,9 +16,12 @@ import {
 } from "src/useFullItems";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { UpdateOrderStatusDto } from "./dto/update-orderStatus.dto";
+import { PrismaService } from "src/prisma/prisma.service";
 
 @Injectable()
 export class OrdersService {
+  constructor(private readonly prisma: PrismaService) {}
+
   async create(
     createOrderDto: CreateOrderDto,
     payload: JwtPayload_restaurantId,
@@ -209,5 +212,21 @@ export class OrdersService {
       dto.tableSectionId,
       dto.orderId,
     );
+  }
+
+  getOrder_logs(payload: JwtPayload_restaurantId) {
+    return this.prisma.order_Logs.findMany({
+      where: {
+        waiterId: payload.userId,
+      },
+      include: {
+        SessionLogs: {
+          select: {
+            tableNumber: true,
+            tableId: true,
+          },
+        },
+      },
+    });
   }
 }

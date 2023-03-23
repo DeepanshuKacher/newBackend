@@ -13,6 +13,7 @@ import { S3ImagesService } from "src/s3-images/s3-images.service";
 import { constants, redisClient } from "src/useFullItems";
 import { CreateChefDto } from "./dto/create-chef.dto";
 import { UpdateChefDto } from "./dto/update-chef.dto";
+import { GlobalPrismaFunctionsService } from "src/global-prisma-functions/global-prisma-functions.service";
 
 @Injectable()
 export class ChefsService {
@@ -21,6 +22,7 @@ export class ChefsService {
     private readonly s3Images: S3ImagesService,
     private readonly authService: AuthService,
     private readonly mailService: MailServiceService,
+    private readonly globalPrismaFunction: GlobalPrismaFunctionsService,
   ) {}
 
   async create(
@@ -120,6 +122,49 @@ export class ChefsService {
     }
   }
 
+  async getRestaurantDetail_For_Chef(chefMongodbId: string) {
+    const data = await this.prisma.chef.findUnique({
+      where: {
+        id: chefMongodbId,
+      },
+      select: {
+        Restaurant: {
+          select: {
+            city: true,
+            name: true,
+            id: true,
+            tables: true,
+            dishesh: {
+              select: {
+                id: true,
+                name: true,
+                // available: true, it will be usefull in upcomming features
+              },
+              orderBy: {
+                name: "asc",
+              },
+            },
+          },
+        },
+        name: true,
+        id: true,
+      },
+    });
+
+    if (data === null)
+      return {
+        selfDetail: { name: "clear" },
+      };
+
+    // const { restaurantSettingForWaiter, city, dishesh, id, name, tables } =
+    //   data?.Restaurant;
+
+    return {
+      selfDetail: { name: data.name, id: data.id },
+      restaurantDetail: data.Restaurant,
+    };
+  }
+
   async checkToken(token: string) {
     const accessToken = await redisClient.GETDEL(token);
 
@@ -177,18 +222,6 @@ export class ChefsService {
     };
   }
 
-  findAll() {
-    return `This action returns all chefs`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} chef`;
-  }
-
-  update(id: number, updateChefDto: UpdateChefDto) {
-    return `This action updates a #${id} chef`;
-  }
-
   async remove(id: string, payload: JwtPayload_restaurantId) {
     try {
       this.s3Images.deleteImage(
@@ -201,11 +234,18 @@ export class ChefsService {
         constants.workerIdentityPhoto(id),
       );
 
-      await this.prisma.chef.delete({
+      const updateCommitPromis =
+        this.globalPrismaFunction.updateRestaurantCommitUUID(
+          payload.restaurantId,
+        );
+
+      const deleteChefPromis = this.prisma.chef.delete({
         where: {
           id,
         },
       });
+
+      await Promise.all([deleteChefPromis, updateCommitPromis]);
 
       return constants.OK;
     } catch (error) {
