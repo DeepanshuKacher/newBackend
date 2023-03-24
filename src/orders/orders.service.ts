@@ -215,18 +215,42 @@ export class OrdersService {
   }
 
   getOrder_logs(payload: JwtPayload_restaurantId) {
-    return this.prisma.order_Logs.findMany({
-      where: {
-        waiterId: payload.userId,
-      },
-      include: {
-        SessionLogs: {
-          select: {
-            tableNumber: true,
-            tableId: true,
+    switch (payload.userType) {
+      case "Waiter":
+        return this.prisma.order_Logs.findMany({
+          where: {
+            waiterId: payload.userId,
           },
-        },
-      },
-    });
+          include: {
+            SessionLogs: {
+              select: {
+                tableNumber: true,
+                tableId: true,
+              },
+            },
+          },
+          orderBy: {
+            orderTimeStamp: "desc",
+          },
+        });
+
+      case "Chef":
+        return this.prisma.order_Logs.findMany({
+          where: {
+            chefId: payload.userId,
+          },
+          include: {
+            SessionLogs: {
+              select: {
+                tableNumber: true,
+                tableId: true,
+              },
+            },
+          },
+          orderBy: {
+            orderTimeStamp: "desc",
+          },
+        });
+    }
   }
 }

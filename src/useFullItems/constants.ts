@@ -41,7 +41,7 @@ export const constants = {
   globalDomainForFoodie:
     workEnvironment === NodeEnvironment.PRODUCTION
       ? ".eatrofoods.com"
-      : "192.168.72.14",
+      : "192.168.43.48",
 
   userType: "d7d-+r5",
   // useTypeManager: "kxEaaz7dtU",
