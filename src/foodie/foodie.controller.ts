@@ -30,7 +30,7 @@ export class FoodieController {
   @Get(":restaurantId/:tableSectionId/:tableNumber")
   @Redirect(
     constants.IS_DEVELOPMENT
-      ? "http://192.168.43.48:3000"
+      ? "http://192.168.72.14:3000"
       : "https://foodie.eatrofoods.com",
   )
   createSession(

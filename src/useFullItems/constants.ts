@@ -17,7 +17,7 @@ const workEnvironment = getConfig("NODE_ENV");
 const modifyRestroURL =
   workEnvironment === NodeEnvironment.PRODUCTION
     ? "https://modify-restaurants.eatrofoods.com"
-    : "http://localhost:3002";
+    : "http://192.168.72.14:3002";
 
 export const constants = {
   OTP: "OTP",
@@ -36,12 +36,12 @@ export const constants = {
   globalDomain:
     workEnvironment === NodeEnvironment.PRODUCTION
       ? ".eatrofoods.com"
-      : "localhost",
+      : "192.168.72.14",
 
   globalDomainForFoodie:
     workEnvironment === NodeEnvironment.PRODUCTION
       ? ".eatrofoods.com"
-      : "192.168.43.48",
+      : "192.168.72.14",
 
   userType: "d7d-+r5",
   // useTypeManager: "kxEaaz7dtU",
@@ -85,4 +85,16 @@ export const privateContstants = {
   workEnvironment,
   updateToken: "updateToken",
   clearData: "clearData",
+};
+
+export const functionsObject = {
+  arrayToObject: <T>(itemArray: any[]): { [key: string]: T } => {
+    const tempObj = {};
+    for (let x of itemArray) {
+      if (x) {
+        tempObj[x] = x;
+      }
+    }
+    return tempObj;
+  },
 };

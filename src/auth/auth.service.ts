@@ -4,19 +4,19 @@ import {
   InternalServerErrorException,
   NotFoundException,
   HttpException,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { CreateOwnerDto } from 'src/owner/dto';
-import * as argon from 'argon2';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
-import { JwtPayload_restaurantId } from '../Interfaces';
-import { EmailDto, GetJwtDto, SignInDto, UserType } from './dto';
-import { redisClient, constants, redisConstants } from '../useFullItems';
-import type { Response, Request } from 'express';
-import { ConfigService } from '@nestjs/config';
-import { MailServiceService } from 'src/mail-service/mail-service.service';
-import { randomUUID } from 'crypto';
+} from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { CreateOwnerDto } from "src/owner/dto";
+import * as argon from "argon2";
+import { PrismaService } from "src/prisma/prisma.service";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
+import { JwtPayload_restaurantId } from "../Interfaces";
+import { EmailDto, GetJwtDto, SignInDto, UserType } from "./dto";
+import { redisClient, constants, redisConstants } from "../useFullItems";
+import type { Response, Request } from "express";
+import { ConfigService } from "@nestjs/config";
+import { MailServiceService } from "src/mail-service/mail-service.service";
+import { randomUUID } from "crypto";
 
 @Injectable()
 export class AuthService {
@@ -42,7 +42,7 @@ export class AuthService {
 
       await Promise.all([response, redisOTP]);
 
-      return 'OK';
+      return "OK";
     } catch (error) {
       throw error;
     }
@@ -53,7 +53,7 @@ export class AuthService {
       let otp = await redisClient.GET(constants.OTP + createOwnerDto.email);
 
       if (!otp || otp !== createOwnerDto.otp)
-        throw new ForbiddenException('Invalid OTP');
+        throw new ForbiddenException("Invalid OTP");
 
       await redisClient.DEL(constants.OTP + createOwnerDto.email);
 
@@ -69,11 +69,11 @@ export class AuthService {
         },
       });
 
-      return 'OK';
+      return "OK";
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          throw new ForbiddenException('Credentials taken');
+        if (error.code === "P2002") {
+          throw new ForbiddenException("Credentials taken");
         }
       } else console.log({ error });
     }
@@ -85,12 +85,12 @@ export class AuthService {
       where: { email: dto.email },
     });
 
-    if (!user) throw new ForbiddenException('Invalid Credentials');
+    if (!user) throw new ForbiddenException("Invalid Credentials");
 
     // match password
     const result = await argon.verify(user.hash, dto.password);
 
-    if (!result) throw new ForbiddenException('Invalid Credentials');
+    if (!result) throw new ForbiddenException("Invalid Credentials");
 
     // return jwt
 
@@ -98,9 +98,9 @@ export class AuthService {
 
     response.cookie(constants.sessionId, user.id, {
       domain: constants.globalDomain,
-      secure: true,
+      secure: constants.IS_DEVELOPMENT ? false : true,
       signed: true,
-      sameSite: 'strict',
+      sameSite: "strict",
       httpOnly: true,
       // expires: new Date(
       //   `${currentDateTime.getMonth()} ${currentDateTime.getDate()} ${currentDateTime.getFullYear()} 23:59:55`,
@@ -109,9 +109,9 @@ export class AuthService {
 
     response.cookie(constants.userType, dto.userType, {
       domain: constants.globalDomain,
-      secure: true,
+      secure: constants.IS_DEVELOPMENT ? false : true,
       signed: true,
-      sameSite: 'strict',
+      sameSite: "strict",
       httpOnly: true,
       // expires: new Date(
       //   `${currentDateTime.getMonth()} ${currentDateTime.getDate()} ${currentDateTime.getFullYear()} 23:59:55`,
@@ -122,7 +122,7 @@ export class AuthService {
 
     // else redirect to add restro page
 
-    return 'OK';
+    return "OK";
   }
 
   async getJwt(response: Response, request: Request, dto: GetJwtDto) {

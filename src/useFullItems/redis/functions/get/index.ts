@@ -1,4 +1,3 @@
-import { Size } from "src/orders/dto/create-order.dto";
 import { redisConstants } from "../../constants";
 import { redisClient } from "../../redisClient";
 import {
@@ -7,7 +6,8 @@ import {
 } from "./getFunctions";
 
 export const redisGetFunction = {
-  getOrder: (orderUUID: string) =>redisClient.HGETALL(redisConstants.orderKey(orderUUID)),
+  getOrder: (orderUUID: string) =>
+    redisClient.HGETALL(redisConstants.orderKey(orderUUID)),
 
   restaurantTableStatus: (restaurantId: string) =>
     redisClient.HGETALL(redisConstants.tablesStatusKey(restaurantId)),

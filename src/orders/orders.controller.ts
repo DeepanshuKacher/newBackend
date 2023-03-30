@@ -9,7 +9,6 @@ import {
 } from "@nestjs/common";
 import { OrdersService } from "./orders.service";
 import { CreateOrderDto } from "./dto/create-order.dto";
-import { UpdateOrderDto } from "./dto/update-order.dto";
 import { GetJwtPayload } from "src/decorators";
 import { JwtPayload_restaurantId } from "src/Interfaces";
 import { UpdateOrderStatusDto } from "./dto/update-orderStatus.dto";

@@ -27,7 +27,6 @@ async function bootstrap() {
     });
   } else if (constants.IS_DEVELOPMENT) {
     app.enableCors({
-      // origin: /^http:[/]{2}localhost:[0-9]{4}/,
       origin: /http:[.]*/,
       credentials: true,
     });

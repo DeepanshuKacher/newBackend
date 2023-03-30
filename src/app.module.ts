@@ -19,6 +19,8 @@ import { RestaurantSettingModule } from "./restaurant-setting/restaurant-setting
 import { FoodieModule } from "./foodie/foodie.module";
 import { RestaurantsignupModule } from "./restaurantsignup/restaurantsignup.module";
 import { GlobalPrismaFunctionsModule } from "./global-prisma-functions/global-prisma-functions.module";
+import { RevenueModule } from "./analysis/revenue/revenue.module";
+import { ManagerOwnerModule } from './manager-owner/manager-owner.module';
 
 @Module({
   imports: [
@@ -42,6 +44,8 @@ import { GlobalPrismaFunctionsModule } from "./global-prisma-functions/global-pr
     FoodieModule,
     RestaurantsignupModule,
     GlobalPrismaFunctionsModule,
+    RevenueModule,
+    ManagerOwnerModule,
   ],
 })
 export class AppModule {}

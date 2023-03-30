@@ -17,10 +17,14 @@ import {
 import { mqttPublish } from "../useFullItems";
 import { CreateSessionDto } from "./dto/create-session.dto";
 import { PrismaService } from "src/prisma/prisma.service";
+import { GlobalPrismaFunctionsService } from "src/global-prisma-functions/global-prisma-functions.service";
 
 @Injectable()
 export class SessionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly prismaGlobalFunction: GlobalPrismaFunctionsService,
+  ) {}
   async createSession(
     restaurantId: string,
     tableSectionId: string,
@@ -200,19 +204,28 @@ export class SessionsService {
 
     // save orders to prisma
 
-    const orderObjects = await redisGetFunction.getOrdersObjectFromSessionUUID(
-      sessionId,
-    );
+    const orderObjectsPromis =
+      redisGetFunction.getOrdersObjectFromSessionUUID(sessionId);
 
-    // const sessionLog = await this.prisma.sessionLogs.create({
-    //   data: {
-    //     tableNumber,
-    //     tableId: tableSectionId,
-    //   },
-    //   select: {
-    //     id: true,
-    //   },
-    // });
+    const DisheshInfoPromis = this.prisma.dish.findMany({
+      where: {
+        restaurantId: payload.restaurantId,
+      },
+      select: {
+        id: true,
+        FullLarge_Price: true,
+        FullMedium_Price: true,
+        FullSmall_Price: true,
+        HalfLarge_Price: true,
+        HalfMedium_Price: true,
+        HalfSmall_Price: true,
+      },
+    });
+
+    const [orderObjects, dishInfo] = await Promise.all([
+      orderObjectsPromis,
+      DisheshInfoPromis,
+    ]);
 
     const saveOrdersLogsToPrismaPromis = this.prisma.order_Logs.createMany({
       data: orderObjects.map((item) => ({
@@ -228,13 +241,47 @@ export class SessionsService {
       })),
     });
 
+    const getOrderPrice = (order: Order) => {
+      const dish = dishInfo.find((dish) => dish.id === order.dishId);
+
+      const fullQuantity = parseInt(order.fullQuantity),
+        halfQuantity = parseInt(order.halfQuantity),
+        size = order.size;
+
+      let returnPrice = 0;
+
+      if (size === "Large") {
+        returnPrice = (fullQuantity || 0) * (dish?.FullLarge_Price || 0);
+        returnPrice += (halfQuantity || 0) * (dish?.HalfLarge_Price || 0);
+      } else if (size === "Medium") {
+        returnPrice = (fullQuantity || 0) * (dish?.FullMedium_Price || 0);
+        returnPrice += (halfQuantity || 0) * (dish?.HalfMedium_Price || 0);
+      } else if (size === "Small") {
+        returnPrice = (fullQuantity || 0) * (dish?.FullSmall_Price || 0);
+        returnPrice += (halfQuantity || 0) * (dish?.HalfSmall_Price || 0);
+      }
+      return returnPrice;
+    };
+
+    const dateObje = new Date();
+    const currentDate = new Date(
+      dateObje.getFullYear(),
+      dateObje.getMonth(),
+      dateObje.getDate(),
+      5,
+      30,
+    );
+
+
     const saveOrderDataToPrisma = this.prisma.ordersData.createMany({
       data: orderObjects.map((item) => ({
-        dateOfOrder: item.createdAt,
         dishId: item.dishId,
         DishSize: item.size,
         fullQuantity: parseInt(item.fullQuantity),
         halfQuantity: parseInt(item.halfQuantity),
+        cost: getOrderPrice(item),
+        restaurantId: payload.restaurantId,
+        dateOfOrder: currentDate,
       })),
     });
 

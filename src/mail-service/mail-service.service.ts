@@ -1,24 +1,30 @@
 import { Injectable, NotImplementedException } from "@nestjs/common";
 import * as nodemailer from "nodemailer";
+import { constants } from "src/useFullItems";
 
 @Injectable()
 export class MailServiceService {
   async sendMail(email: string, text: string) {
     const transporter = nodemailer.createTransport({
-      host: "mail.eatrofoods.com",
+      host: "smtp.gmail.com",
       port: 465,
       secure: true,
       auth: {
-        user: "care@eatrofoods.com",
-        pass: "9m4P,Br4T5",
+        user: "eatrofoods@gmail.com",
+        pass: "zvcbewvcihijmdzz",
       },
     });
-    return await transporter.sendMail({
-      from: "care@eatrofoods.com",
-      to: email,
-      subject: "Message",
-      text,
-    });
+    return await transporter
+      .sendMail({
+        from: "eatrofoods@gmail.com",
+        to: email,
+        subject: "Message",
+        text,
+      })
+      .catch((error) => {
+        console.log({ error });
+        throw new NotImplementedException();
+      });
     //   (error, info) => {
     //     if (error) throw new NotImplementedException();
     //     else if (info) return info;

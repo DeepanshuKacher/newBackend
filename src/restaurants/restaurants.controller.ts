@@ -26,9 +26,15 @@ export class RestaurantsController {
   @Get(":restaurantId")
   getRestaurantDetail(
     @GetJwtPayload() payload: JwtPayload_restaurantId,
-    @Param("restaurantId") id: string,
+    // @Param("restaurantId") id: string,
   ) {
-    return this.restaurantsService.restaurantDetail(payload, id);
+    return this.restaurantsService.restaurantDetail(payload);
+  }
+  @Get("getDetail")
+  getRestaurantDetail_payload(
+    @GetJwtPayload() payload: JwtPayload_restaurantId,
+  ) {
+    return this.restaurantsService.restaurantDetail(payload);
   }
 
   @Public()

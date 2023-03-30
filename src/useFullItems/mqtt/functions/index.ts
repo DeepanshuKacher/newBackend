@@ -1,5 +1,6 @@
 import { CreateOrderDto, Size } from "src/orders/dto/create-order.dto";
 import { mqttClient } from "../client";
+import { Order } from "src/useFullItems/redis";
 
 const orderStatusUpdation = {
   Accept: "Accept",
@@ -39,6 +40,8 @@ const mqttMessageFunctions = {
     fullQuantity,
     halfQuantity,
     size,
+    createdAt,
+    orderNo,
   }: {
     dishId: string;
     tableSectionId: string;
@@ -49,17 +52,23 @@ const mqttMessageFunctions = {
     size: Size;
     halfQuantity: number;
     fullQuantity: number;
+    createdAt: string;
+    orderNo: number;
   }) =>
     formatPayload("dishOrder", {
-      dishId,
-      tableSectionId,
-      user_description,
-      orderedBy,
-      orderId,
-      tableNumber,
-      fullQuantity,
-      halfQuantity,
-      size,
+      order: {
+        dishId,
+        tableSectionId,
+        user_description,
+        orderedBy,
+        orderId,
+        tableNumber,
+        fullQuantity,
+        halfQuantity,
+        size,
+        createdAt,
+      },
+      orderNo,
     }),
 
   acceptOrder: (orderId: string, chefId: string) =>
@@ -81,19 +90,8 @@ const mqttMessageFunctions = {
       orderStatus: orderStatusUpdation.Completed,
     }),
 
-  cardDishOrder: (
-    orderArray: {
-      dishId: string;
-      tableSectionId: string;
-      user_description?: string;
-      orderedBy: string;
-      orderId: string;
-      tableNumber: number;
-      size: Size;
-      halfQuantity: number;
-      fullQuantity: number;
-    }[],
-  ) => formatPayload("cardDishOrder", orderArray),
+  cardDishOrder: (orderArray: Order[], orderNo: number) =>
+    formatPayload("cardDishOrder", { orderArray, orderNo }),
 };
 
 const mqttTopicFunctions = {
@@ -139,10 +137,14 @@ const mqttMessageWithTopic = {
     user_description,
     orderId,
     orderedBy,
+    createdAt,
+    orderNo,
   }: CreateOrderDto & {
     restaurantId: string;
     orderedBy: string;
     orderId: string;
+    createdAt: string;
+    orderNo: number;
   }) =>
     mqttClient.publish(
       mqttTopicFunctions.orderBroadCast(
@@ -160,6 +162,8 @@ const mqttMessageWithTopic = {
         fullQuantity,
         halfQuantity,
         size,
+        createdAt,
+        orderNo,
       }),
     ),
 
@@ -219,7 +223,7 @@ const mqttMessageWithTopic = {
         props.tableSectionId,
         props.tableNumber,
       ),
-      mqttMessageFunctions.cardDishOrder(props.orderArray),
+      mqttMessageFunctions.cardDishOrder(props.orderArray, props.orderNo),
     ),
 };
 
@@ -229,15 +233,19 @@ interface CardDishOrderProps {
   restaurantId: string;
   tableSectionId: string;
   tableNumber: number;
+  orderNo: number;
   orderArray: {
     dishId: string;
+    orderId: string;
+    tableNumber: string;
     tableSectionId: string;
     user_description?: string;
     orderedBy: string;
-    orderId: string;
-    tableNumber: number;
     size: Size;
-    halfQuantity: number;
-    fullQuantity: number;
+    fullQuantity?: string;
+    halfQuantity?: string;
+    chefAssign?: string;
+    completed?: string;
+    createdAt: string;
   }[];
 }

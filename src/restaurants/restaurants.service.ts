@@ -17,6 +17,7 @@ import {
 } from "../useFullItems";
 import { AuthService } from "src/auth/auth.service";
 import { JwtPayload_restaurantId } from "src/Interfaces";
+import { Prisma } from "@prisma/client";
 
 @Injectable()
 export class RestaurantsService {
@@ -82,7 +83,7 @@ export class RestaurantsService {
 
   async restaurantDetail(
     payload: JwtPayload_restaurantId,
-    restaurantId: string,
+    // restaurantId: string,
   ) {
     // const userId = dto.userId;
     // const userType = dto.userType;
@@ -91,7 +92,7 @@ export class RestaurantsService {
 
     try {
       const restaurantInfo = this.prisma.restaurant.findUnique({
-        where: { id: restaurantId },
+        where: { id: payload.restaurantId },
         select: {
           name: true,
           city: true,
@@ -113,7 +114,7 @@ export class RestaurantsService {
 
       if (payload?.userType === "Owner" || payload?.userId === "Manager") {
         const restaurantPrivateInfo = this.prisma.restaurant.findUnique({
-          where: { id: restaurantId },
+          where: { id: payload.restaurantId },
           select: {
             restaurantSettingForWaiter: true,
             waiters: {
@@ -139,14 +140,54 @@ export class RestaurantsService {
           },
         });
 
-        const [restaurantDetails, restaurantPrivateDetails] = await Promise.all(
-          [restaurantInfo, restaurantPrivateInfo],
-        );
-        restaurantDetails["settings"] =
-          restaurantPrivateDetails.restaurantSettingForWaiter;
-        restaurantDetails["waiters"] = restaurantPrivateDetails.waiters;
-        restaurantDetails["chefs"] = restaurantPrivateDetails.chefs;
-        return restaurantDetails;
+        let selfInfoPromis: Prisma.Prisma__OwnerClient<
+          {
+            id: string;
+          },
+          never
+        >;
+
+        /* make this for  manager also
+
+        if(payload.userType === 'Manager'){....}
+        */
+
+        if (payload.userType === "Owner") {
+          selfInfoPromis = this.prisma.owner.findUnique({
+            where: {
+              id: payload.userId,
+            },
+            select: {
+              id: true,
+            },
+          });
+        }
+
+        const [restaurantDetails, restaurantPrivateDetails, selfInfo] =
+          await Promise.all([
+            restaurantInfo,
+            restaurantPrivateInfo,
+            selfInfoPromis,
+          ]);
+
+        // const completeRestaurantDetail = {
+        //   restaurantDetails,
+        //   settings: restaurantPrivateDetails.restaurantSettingForWaiter,
+        //   waiters: restaurantPrivateDetails.waiters,
+        //   chefs: restaurantPrivateInfo.chefs,
+        // };
+
+        // restaurantDetails["settings"] =
+        //   restaurantPrivateDetails.restaurantSettingForWaiter;
+        // restaurantDetails["waiters"] = restaurantPrivateDetails.waiters;
+        // restaurantDetails["chefs"] = restaurantPrivateDetails.chefs;
+        return {
+          restaurantDetails,
+          settings: restaurantPrivateDetails.restaurantSettingForWaiter,
+          waiters: restaurantPrivateDetails.waiters,
+          chefs: restaurantPrivateDetails.chefs,
+          selfInfo,
+        };
       }
 
       return restaurantInfo;

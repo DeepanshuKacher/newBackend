@@ -42,6 +42,8 @@ model Restaurant {
 
   chefs Chef[]
 
+  orderData OrdersData[]
+
   owner   Owner  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId String @db.ObjectId
 
@@ -179,11 +181,14 @@ model OrdersData {
   dishId String @db.ObjectId
 
   DishSize DishSize
+  cost     Int
 
   fullQuantity Int?
   halfQuantity Int?
 
-  dateOfOrder DateTime @db.Date
+  dateOfOrder  DateTime   @db.Date
+  Restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String     @db.ObjectId
 }
 
 model SessionLogs {

@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
 } from "@nestjs/common";
@@ -13,6 +14,8 @@ import {
   redisConstants,
   redisClient,
   mqttPublish,
+  Order,
+  functionsObject,
 } from "src/useFullItems";
 import { CartToOrderDTO } from "./dto/cart-to-order.dto";
 import { DeleteCartOrderDTO } from "./dto/delete-cart-order.dto";
@@ -46,38 +49,29 @@ export class CartService {
       fullQuantity,
       halfQuantity,
       orderedBy: payload.userId,
+      createdAt: new Date().toISOString(),
     });
+
+    if (!(fullQuantity || halfQuantity)) throw new ForbiddenException();
+
+    const sessionIdFromRedis = await redisGetFunction.sessionIdFromTableInfo(
+      payload.restaurantId,
+      tableSectionId,
+      tableNumber,
+    );
+
+    if (!sessionIdFromRedis) throw new ConflictException();
+
+    if (sessionIdFromRedis !== redisConstants.sessionKey(sessionId))
+      throw new ConflictException();
 
     const pushOrderToCartSession = redis_create_Functions.cartSession(
       sessionId,
       orderId,
     );
 
-    // const pushOrderToRestaurantContainer = redisClient.LPUSH(
-    //   redisConstants.restaurantRealtimeOrdersContainerKey(payload.restaurantId),
-    //   redisConstants.orderKey(orderId),
-    // );
-
     try {
-      await Promise.all([
-        createOrder,
-        pushOrderToCartSession,
-        // pushOrderToRestaurantContainer,
-      ]);
-
-      // mqttPublish.dishOrder({
-      //   dishId,
-      //   orderedBy: payload.userId,
-      //   orderId,
-      //   restaurantId: payload.restaurantId,
-      //   sessionId,
-      //   size,
-      //   tableNumber,
-      //   tableSectionId,
-      //   fullQuantity,
-      //   halfQuantity,
-      //   user_description,
-      // });
+      await Promise.all([createOrder, pushOrderToCartSession]);
 
       return constants.OK;
     } catch (error) {
@@ -105,6 +99,18 @@ export class CartService {
     dto: CartToOrderDTO,
   ) {
     const { cartOrder, tableNumber, tableSessionId, tableSectionId } = dto;
+
+    const sessionIdFromRedis = await redisGetFunction.sessionIdFromTableInfo(
+      payload.restaurantId,
+      tableSectionId,
+      tableNumber,
+    );
+
+    if (!sessionIdFromRedis) throw new ConflictException();
+
+    if (sessionIdFromRedis !== redisConstants.sessionKey(tableSessionId))
+      throw new ConflictException();
+
     const orderKeys: string[] = [];
 
     const selectedOrderPromis = [];
@@ -136,24 +142,24 @@ export class CartService {
       orderKeys,
     );
     try {
-      await Promise.all([
-        pushOrderToTableSessionPromis,
-        pushOrderToRestaurantContainerPromis,
-      ]);
-
-      // console.log(selectedOrderPromis);
+      const [pushOrderToTableSession, pushOrderToRestaurantContainer] =
+        await Promise.all([
+          pushOrderToTableSessionPromis,
+          pushOrderToRestaurantContainerPromis,
+        ]);
 
       await redisClient.DEL(redisConstants.cartSessionKey(tableSessionId));
 
       const newOrder = cartOrders.filter((item) => !orderKeys.includes(item));
 
-      const selectedOrder = await Promise.all(selectedOrderPromis);
+      const selectedOrder: Order[] = await Promise.all(selectedOrderPromis);
 
       mqttPublish.cardDishOrder({
         restaurantId: payload.restaurantId,
         tableNumber: tableNumber,
         tableSectionId: tableSectionId,
         orderArray: selectedOrder,
+        orderNo: pushOrderToRestaurantContainer,
       });
 
       if (newOrder.length > 0)
@@ -174,22 +180,35 @@ export class CartService {
   async deleteCartOrder(dto: DeleteCartOrderDTO) {
     const { cartOrder, tableSessionId } = dto;
 
-    const orderKeyObject = {};
+    const deleteOrderKeyObject = {};
     const orderKeys = cartOrder.map((orderUUID) => {
       const key = redisConstants.orderKey(orderUUID);
-      orderKeyObject[key] = key;
+      deleteOrderKeyObject[key] = key;
       return key;
     });
 
-    const preserveOrderKeys = await redisGetFunction
+    const ordersInCart = await redisGetFunction
       .cartSession(tableSessionId)
-      .then((orderKeysArray) =>
-        orderKeysArray.filter((orderKey) => !orderKeyObject[orderKey]),
-      )
+      // .then((orderKeysArray) =>
+      // orderKeysArray.filter((orderKey) => !orderKeyObject[orderKey]),
+      // )
       .catch((error) => {
         console.log(error);
         throw new InternalServerErrorException();
       });
+
+    const ordersInCartObject =
+      functionsObject.arrayToObject<string>(ordersInCart);
+
+    for (let x in deleteOrderKeyObject) {
+      if (!ordersInCartObject[x]) throw new ConflictException();
+    }
+
+    const preserveOrderKeys: string[] = [];
+
+    for (let x in ordersInCartObject) {
+      if (!deleteOrderKeyObject[x]) preserveOrderKeys.push(x);
+    }
 
     const deleteCart = redisClient.DEL(
       redisConstants.cartSessionKey(tableSessionId),

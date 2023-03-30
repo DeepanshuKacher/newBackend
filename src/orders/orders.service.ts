@@ -12,6 +12,7 @@ import {
   orderConstants,
   redisClient,
   redisConstants,
+  redisGetFunction,
   redis_create_Functions,
 } from "src/useFullItems";
 import { CreateOrderDto } from "./dto/create-order.dto";
@@ -39,9 +40,21 @@ export class OrdersService {
 
     if (!(fullQuantity || halfQuantity)) throw new ForbiddenException();
 
-    const orderId = randomUUID();
+    const sessionIdFromRedis = await redisGetFunction.sessionIdFromTableInfo(
+      payload.restaurantId,
+      tableSectionId,
+      tableNumber,
+    );
 
-    const createOrder = redis_create_Functions.createOrder({
+    if (!sessionIdFromRedis) throw new ConflictException();
+
+    if (sessionIdFromRedis !== redisConstants.sessionKey(sessionId))
+      throw new ConflictException();
+
+    const orderId = randomUUID(),
+      currentDate = new Date().toISOString();
+
+    const createOrderPromis = redis_create_Functions.createOrder({
       dishId,
       orderedBy: payload.userId,
       orderId,
@@ -51,25 +64,32 @@ export class OrdersService {
       fullQuantity,
       halfQuantity,
       user_description,
+      createdAt: currentDate,
     });
 
-    const pushOrderToTableSession = redis_create_Functions.tableSession(
+    const pushOrderToTableSessionPromis = redis_create_Functions.tableSession(
       sessionId,
       orderId,
     );
 
-    const pushOrderToRestaurantContainer =
+    const pushOrderToRestaurantContainerPromis =
       redis_create_Functions.restaurantRealtimeOrdersContainer(
         payload.restaurantId,
         orderId,
       );
 
     try {
-      await Promise.all([
+      const [
         createOrder,
         pushOrderToTableSession,
         pushOrderToRestaurantContainer,
+      ] = await Promise.all([
+        createOrderPromis,
+        pushOrderToTableSessionPromis,
+        pushOrderToRestaurantContainerPromis,
       ]);
+
+      console.log({ pushOrderToRestaurantContainer });
 
       mqttPublish.dishOrder({
         dishId,
@@ -83,6 +103,8 @@ export class OrdersService {
         fullQuantity,
         halfQuantity,
         user_description,
+        createdAt: currentDate,
+        orderNo: pushOrderToRestaurantContainer,
       });
 
       return constants.OK;
@@ -123,22 +145,20 @@ export class OrdersService {
         restaurantOrderPromisYesterday,
       ]);
 
-    // console.log({ restaurantOrderDataToday, restaurantOrderDataYesterday });
+    const todaysOrdersPromis = [];
+    const yesterDaysOrdersPromis = [];
 
-    const restaurantOrder = [
-      ...restaurantOrderDataToday,
-      ...restaurantOrderDataYesterday,
-    ];
-
-    const ordersPromis = [];
-
-    for (let x of restaurantOrder) {
-      ordersPromis.push(redisClient.HGETALL(x));
+    for (let x of restaurantOrderDataToday) {
+      todaysOrdersPromis.push(redisClient.HGETALL(x));
+    }
+    for (let x of restaurantOrderDataYesterday) {
+      yesterDaysOrdersPromis.push(redisClient.HGETALL(x));
     }
 
-    // console.log({ ordersPromis });
+    const todaysOrders = await Promise.all(todaysOrdersPromis);
+    const yesterDaysOrders = await Promise.all(yesterDaysOrdersPromis);
 
-    return Promise.all(ordersPromis);
+    return yesterDaysOrders.concat(todaysOrders);
   }
 
   async acceptOrder(

@@ -24,7 +24,7 @@ export type Order = {
   halfQuantity?: string;
   chefAssign?: string;
   completed?: string;
-  createdAt?: string;
+  createdAt: string;
 };
 
 export interface OrderProps
@@ -84,7 +84,7 @@ export const redis_create_Functions = {
         orderConstants.halfQuantity,
         props.halfQuantity || 0,
         orderConstants.createdAt,
-        new Date().toISOString(),
+        props.createdAt,
       ])
       .then(() =>
         redisClient.EXPIRE(

@@ -1,10 +1,30 @@
 import { CronJob } from "cron";
 import { Order } from "../functions";
 
+const getYesterday = () => {
+  const currentDate = new Date();
+  const getTodaysDate = currentDate.getDate();
+  if (getTodaysDate === 1) {
+    const getCurrentMonth = currentDate.getMonth() + 1; //because jan is 0 and dec is 11
+    if (getCurrentMonth === 1) return 31;
+    else {
+      return new Date(
+        currentDate.getFullYear(),
+        getCurrentMonth - 1,
+        0,
+        5,
+        30,
+      ).getDate();
+    }
+  } else {
+    return getTodaysDate - 1;
+  }
+};
+
 const dayTrackerHOF_Function = () => {
-  const dayTracker: { today: number; yesterday: number | null } = {
+  const dayTracker: { today: number; yesterday: number } = {
     today: new Date().getDate(),
-    yesterday: null,
+    yesterday: getYesterday(),
   };
 
   new CronJob(
