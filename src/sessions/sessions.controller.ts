@@ -34,4 +34,9 @@ export class SessionsController {
   ) {
     return this.sessionsService.clearSession(createSessionDto, payload, id);
   }
+
+  @Get("logs")
+  getSessionHistory(@GetJwtPayload() payload: JwtPayload_restaurantId) {
+    this.sessionsService.getSessionHistory(payload);
+  }
 }

@@ -89,8 +89,6 @@ export class OrdersService {
         pushOrderToRestaurantContainerPromis,
       ]);
 
-      console.log({ pushOrderToRestaurantContainer });
-
       mqttPublish.dishOrder({
         dishId,
         orderedBy: payload.userId,

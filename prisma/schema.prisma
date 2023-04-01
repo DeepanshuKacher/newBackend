@@ -44,6 +44,8 @@ model Restaurant {
 
   orderData OrdersData[]
 
+  sessionLogs SessionLogs[]
+
   owner   Owner  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId String @db.ObjectId
 
@@ -200,6 +202,8 @@ model SessionLogs {
   tableSection        Table        @relation(fields: [tableId], references: [id], onDelete: Cascade)
   tableId             String       @db.ObjectId
   sessionCreationTime DateTime     @default(now())
+  Restaurant          Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId        String       @db.ObjectId
 }
 
 model Order_Logs {

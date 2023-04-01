@@ -17,7 +17,7 @@ const workEnvironment = getConfig("NODE_ENV");
 const modifyRestroURL =
   workEnvironment === NodeEnvironment.PRODUCTION
     ? "https://modify-restaurants.eatrofoods.com"
-    : "http://192.168.72.14:3002";
+    : "http://192.168.43.48:3002";
 
 export const constants = {
   OTP: "OTP",
@@ -36,12 +36,12 @@ export const constants = {
   globalDomain:
     workEnvironment === NodeEnvironment.PRODUCTION
       ? ".eatrofoods.com"
-      : "192.168.72.14",
+      : "192.168.43.48",
 
   globalDomainForFoodie:
     workEnvironment === NodeEnvironment.PRODUCTION
       ? ".eatrofoods.com"
-      : "192.168.72.14",
+      : "192.168.43.48",
 
   userType: "d7d-+r5",
   // useTypeManager: "kxEaaz7dtU",

@@ -85,14 +85,14 @@ export const redis_create_Functions = {
         props.halfQuantity || 0,
         orderConstants.createdAt,
         props.createdAt,
-      ])
-      .then(() =>
-        redisClient.EXPIRE(
-          redisConstants.orderKey(props.orderId),
-          redisKeyExpiry.orderKey,
-          "NX",
-        ),
-      ),
+      ]),
+      // .then(() =>
+      //   redisClient.EXPIRE(
+      //     redisConstants.orderKey(props.orderId),
+      //     redisKeyExpiry.orderKey,
+      //     "NX",
+      //   ),
+      // ),
 
   tableStatus: (
     restaurantId: string,

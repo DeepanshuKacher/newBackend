@@ -12,6 +12,7 @@ import {
   redisClient,
   redisConstants,
   redisGetFunction,
+  redisKeyExpiry,
 } from "src/useFullItems";
 
 import { mqttPublish } from "../useFullItems";
@@ -33,7 +34,12 @@ export class SessionsService {
     const uuid = randomUUID();
 
     const prismaSessionCreationPromis = this.prisma.sessionLogs.create({
-      data: { tableNumber, uuid, tableId: tableSectionId },
+      data: {
+        tableNumber,
+        uuid,
+        tableId: tableSectionId,
+        restaurantId,
+      },
     });
 
     const redisSessionCreationPromis = redisClient.HSET(
@@ -83,91 +89,6 @@ export class SessionsService {
     return constants.OK;
   }
 
-  // async createSessionByFoodie() {
-  //   const sessionId = request.signedCookies[constants.sessionId];
-  //   const userType = request.signedCookies[constants.userType];
-
-  //   const onGoingSession = await redisClient.HGET(
-  //     redisConstants.tablesStatusKey(payload.restaurantId),
-  //     redisConstants.tableSessionKeyForTablesStatus(
-  //       createSessionDto.tableSectionId,
-  //       createSessionDto.tableNumber,
-  //     ),
-  //   );
-
-  //   if (onGoingSession) throw new NotImplementedException();
-
-  //   const uuid = randomUUID();
-
-  //   await redisClient.HSET(
-  //     redisConstants.tablesStatusKey(payload.restaurantId),
-  //     redisConstants.tableSessionKeyForTablesStatus(
-  //       createSessionDto.tableSectionId,
-  //       createSessionDto.tableNumber,
-  //     ),
-  //     redisConstants.sessionKey(uuid),
-  //   );
-
-  //   mqttPublish.sessionStartConfirmation(
-  //     payload.restaurantId,
-  //     createSessionDto.tableSectionId,
-  //     createSessionDto.tableNumber,
-  //     uuid,
-  //   );
-
-  //   return constants.OK;
-  // }
-
-  // async findAll(payload: JwtPayload_restaurantId) {
-  //   const tableSessions: any = await redisClient.HGETALL(
-  //     redisConstants.restaurantTablesSessionKey(payload.restaurantId),
-  //   );
-
-  //   const sessionPromises = [];
-  //   for (let x in tableSessions) {
-  //     // tableSessions[x] = await redisClient.LRANGE(tableSessions[x], 0, -1);
-  //     sessionPromises.push(redisClient.LRANGE(tableSessions[x], 0, -1));
-  //   }
-  //   const ordersKeys = await Promise.all(sessionPromises);
-
-  //   const numberOfOrderKeys = ordersKeys.length;
-  //   let variableOfOrderKeys = numberOfOrderKeys;
-  //   for (let x in tableSessions) {
-  //     tableSessions[x] =
-  //       ordersKeys[numberOfOrderKeys - variableOfOrderKeys].length;
-
-  //     variableOfOrderKeys--;
-  //   }
-
-  //   const ordersPromis = [];
-  //   for (let x of ordersKeys) {
-  //     for (let y of x) {
-  //       ordersPromis.push(redisClient.HGETALL(y));
-  //     }
-  //   }
-  //   const orders = await Promise.all(ordersPromis);
-
-  //   // return orders;
-
-  //   let startNumber = 0;
-  //   for (let x in tableSessions) {
-  //     const storeNumber = tableSessions[x];
-  //     tableSessions[x] = orders.slice(startNumber, storeNumber);
-  //     startNumber = storeNumber;
-  //   }
-
-  //   return tableSessions;
-
-  //   // for (let x in tableSessions) {
-  //   //   const temp = [];
-  //   //   for (let y of tableSessions[x]) {
-  //   //     temp.push(await redisClient.HGETALL(y));
-  //   //   }
-  //   //   tableSessions[x] = temp;
-  //   // }
-  //   // return tableSessions;
-  // }
-
   findAll(payload: JwtPayload_restaurantId) {
     return redisClient.HGETALL(
       redisConstants.tablesStatusKey(payload.restaurantId),
@@ -204,12 +125,21 @@ export class SessionsService {
 
     // save orders to prisma
 
-    const orderObjectsPromis =
-      redisGetFunction.getOrdersObjectFromSessionUUID(sessionId);
+    const orderObjects = await redisGetFunction.getOrdersObjectFromSessionUUID(
+      sessionId,
+    );
 
-    const DisheshInfoPromis = this.prisma.dish.findMany({
+    // const [orderObjects] = await Promise.all([
+    //   orderObjectsPromis,
+    //   // DisheshInfoPromis,
+    // ]);
+
+    const disheshInfo = await this.prisma.dish.findMany({
       where: {
         restaurantId: payload.restaurantId,
+        id: {
+          in: orderObjects.map((order) => order.dishId),
+        },
       },
       select: {
         id: true,
@@ -222,10 +152,7 @@ export class SessionsService {
       },
     });
 
-    const [orderObjects, dishInfo] = await Promise.all([
-      orderObjectsPromis,
-      DisheshInfoPromis,
-    ]);
+    if (constants.IS_DEVELOPMENT) console.log({ disheshInfo });
 
     const saveOrdersLogsToPrismaPromis = this.prisma.order_Logs.createMany({
       data: orderObjects.map((item) => ({
@@ -242,7 +169,7 @@ export class SessionsService {
     });
 
     const getOrderPrice = (order: Order) => {
-      const dish = dishInfo.find((dish) => dish.id === order.dishId);
+      const dish = disheshInfo.find((dish) => dish.id === order.dishId);
 
       const fullQuantity = parseInt(order.fullQuantity),
         halfQuantity = parseInt(order.halfQuantity),
@@ -271,7 +198,6 @@ export class SessionsService {
       5,
       30,
     );
-
 
     const saveOrderDataToPrisma = this.prisma.ordersData.createMany({
       data: orderObjects.map((item) => ({
@@ -315,6 +241,20 @@ export class SessionsService {
         null,
       );
 
+      const setOrderExpiryPromis: Promise<boolean>[] = [];
+
+      orderObjects.forEach((order) =>
+        setOrderExpiryPromis.push(
+          redisClient.EXPIRE(
+            redisConstants.orderKey(order.orderId),
+            redisKeyExpiry.orderKey,
+            "NX",
+          ),
+        ),
+      );
+
+      await Promise.all(setOrderExpiryPromis);
+
       return constants.OK;
     } catch (error) {
       console.log(error);
@@ -322,5 +262,25 @@ export class SessionsService {
         cause: error,
       });
     }
+  }
+
+  getSessionHistory(payload: JwtPayload_restaurantId) {
+    return this.prisma.sessionLogs.findMany({
+      where: {
+        restaurantId: payload.restaurantId,
+      },
+      select: {
+        uuid: true,
+        Order_Logs: true,
+        tableNumber: true,
+        tableSection: true,
+        tableId: true,
+        sessionCreationTime: true,
+        restaurantId: true,
+      },
+      orderBy: {
+        sessionCreationTime: "asc",
+      },
+    });
   }
 }
