@@ -22,10 +22,27 @@ import { GlobalPrismaFunctionsService } from "src/global-prisma-functions/global
 
 @Injectable()
 export class SessionsService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly prismaGlobalFunction: GlobalPrismaFunctionsService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
+
+  sessionLog(payload: JwtPayload_restaurantId) {
+    return this.prisma.sessionLogs.findMany({
+      where: {
+        restaurantId: payload.restaurantId,
+      },
+      select: {
+        uuid: true,
+        Order_Logs: true,
+        tableNumber: true,
+        tableId: true,
+        sessionCreationTime: true,
+        restaurantId: true,
+      },
+      orderBy: {
+        sessionCreationTime: "asc",
+      },
+    });
+  }
+
   async createSession(
     restaurantId: string,
     tableSectionId: string,
@@ -152,9 +169,7 @@ export class SessionsService {
       },
     });
 
-    if (constants.IS_DEVELOPMENT) console.log({ disheshInfo });
-
-    const saveOrdersLogsToPrismaPromis = this.prisma.order_Logs.createMany({
+    const saveOrdersLogsToPrismaPromis = this.prisma.ordersLogs.createMany({
       data: orderObjects.map((item) => ({
         chefId: item.chefAssign,
         dishId: item.dishId,
@@ -165,6 +180,7 @@ export class SessionsService {
         user_description: item.user_description,
         orderTimeStamp: item.createdAt,
         sessionLogsUuid: sessionId,
+        cost: getOrderPrice(item),
       })),
     });
 
@@ -262,25 +278,5 @@ export class SessionsService {
         cause: error,
       });
     }
-  }
-
-  getSessionHistory(payload: JwtPayload_restaurantId) {
-    return this.prisma.sessionLogs.findMany({
-      where: {
-        restaurantId: payload.restaurantId,
-      },
-      select: {
-        uuid: true,
-        Order_Logs: true,
-        tableNumber: true,
-        tableSection: true,
-        tableId: true,
-        sessionCreationTime: true,
-        restaurantId: true,
-      },
-      orderBy: {
-        sessionCreationTime: "asc",
-      },
-    });
   }
 }

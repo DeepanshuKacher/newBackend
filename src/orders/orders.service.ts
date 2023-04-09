@@ -235,7 +235,7 @@ export class OrdersService {
   getOrder_logs(payload: JwtPayload_restaurantId) {
     switch (payload.userType) {
       case "Waiter":
-        return this.prisma.order_Logs.findMany({
+        return this.prisma.ordersLogs.findMany({
           where: {
             waiterId: payload.userId,
           },
@@ -253,7 +253,7 @@ export class OrdersService {
         });
 
       case "Chef":
-        return this.prisma.order_Logs.findMany({
+        return this.prisma.ordersLogs.findMany({
           where: {
             chefId: payload.userId,
           },

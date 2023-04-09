@@ -22,7 +22,7 @@ model Owner {
   createdAt DateTime @default(now())
   updatedAd DateTime @updatedAt
 
-  defaultRestaurant Restaurant? @relation(name: "defaultRestaurant")
+  // defaultRestaurant Restaurant? @relation(name: "defaultRestaurant")
 }
 
 model Restaurant {
@@ -54,8 +54,8 @@ model Restaurant {
 
   restaurantSettingForWaiter RestaurantSettings_Waiter?
 
-  defaultOwner   Owner?  @relation(fields: [defaultOwnerId], references: [id], name: "defaultRestaurant")
-  defaultOwnerId String? @unique @db.ObjectId
+  // defaultOwner   Owner?  @relation(fields: [defaultOwnerId], references: [id], name: "defaultRestaurant")
+  // defaultOwnerId String? @unique @db.ObjectId
 
   commitToken String? //this is important
 }
@@ -113,7 +113,7 @@ model Dish {
   restaurantId String     @db.ObjectId
 
   OrdersData OrdersData[]
-  Order_Logs Order_Logs[]
+  Order_Logs OrdersLogs[]
 }
 
 model Table {
@@ -145,7 +145,7 @@ model Waiter {
 
   Restaurant   Restaurant   @relation(fields: [restaurantId], references: [id])
   restaurantId String       @db.ObjectId
-  Order_Logs   Order_Logs[]
+  Order_Logs   OrdersLogs[]
   // AllowedOrderForLogs Order_Logs[] @relation(name: "allowedId")
 }
 
@@ -166,7 +166,7 @@ model Chef {
 
   Restaurant   Restaurant?  @relation(fields: [restaurantId], references: [id])
   restaurantId String?      @db.ObjectId
-  Order_Logs   Order_Logs[]
+  Order_Logs   OrdersLogs[]
 }
 
 // order data
@@ -197,7 +197,7 @@ model SessionLogs {
   // id                  String       @id @default(auto()) @map("_id") @db.ObjectId
   uuid                String       @id @map("_id")
   // Order_Logs          Order_Logs[] @relation(name: "mongodbId")
-  Order_Logs          Order_Logs[]
+  Order_Logs          OrdersLogs[]
   tableNumber         Int
   tableSection        Table        @relation(fields: [tableId], references: [id], onDelete: Cascade)
   tableId             String       @db.ObjectId
@@ -206,7 +206,7 @@ model SessionLogs {
   restaurantId        String       @db.ObjectId
 }
 
-model Order_Logs {
+model OrdersLogs {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
   // belongSession SessionLogs @relation(fields: [sessionLogsId], references: [id], name: "mongodbId")
@@ -224,8 +224,8 @@ model Order_Logs {
   // allowedBy Waiter? @relation(fields: [waiterId], references: [id], name: "allowedId")
   // allowedId String? @db.ObjectId
 
-  size DishSize
-
+  size         DishSize
+  cost         Int
   fullQuantity Int?
   halfQuantity Int?
 

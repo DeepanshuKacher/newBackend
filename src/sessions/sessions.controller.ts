@@ -8,6 +8,11 @@ import { JwtPayload_restaurantId } from "src/Interfaces";
 export class SessionsController {
   constructor(private readonly sessionsService: SessionsService) {}
 
+  @Get("log")
+  sessionHistory(@GetJwtPayload() payload: JwtPayload_restaurantId) {
+    return this.sessionsService.sessionLog(payload);
+  }
+
   @Get()
   findAll(@GetJwtPayload() payload: JwtPayload_restaurantId) {
     return this.sessionsService.findAll(payload);
@@ -33,10 +38,5 @@ export class SessionsController {
     @GetJwtPayload() payload: JwtPayload_restaurantId,
   ) {
     return this.sessionsService.clearSession(createSessionDto, payload, id);
-  }
-
-  @Get("logs")
-  getSessionHistory(@GetJwtPayload() payload: JwtPayload_restaurantId) {
-    this.sessionsService.getSessionHistory(payload);
   }
 }

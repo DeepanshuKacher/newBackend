@@ -53,7 +53,11 @@ export class DishesService {
       const imageUrl = constants.objectURL(payload.restaurantId, body.name);
 
       this.s3Images.createImage(body.name, payload.restaurantId, file);
-      const uploadDish = this.createDish(body, payload.restaurantId, imageUrl);
+      const uploadDish = await this.createDish(
+        body,
+        payload.restaurantId,
+        imageUrl,
+      );
 
       return constants.OK;
     } catch (error) {
