@@ -169,21 +169,6 @@ export class SessionsService {
       },
     });
 
-    const saveOrdersLogsToPrismaPromis = this.prisma.ordersLogs.createMany({
-      data: orderObjects.map((item) => ({
-        chefId: item.chefAssign,
-        dishId: item.dishId,
-        size: item.size,
-        waiterId: item.orderedBy,
-        fullQuantity: parseInt(item.fullQuantity),
-        halfQuantity: parseInt(item.halfQuantity),
-        user_description: item.user_description,
-        orderTimeStamp: item.createdAt,
-        sessionLogsUuid: sessionId,
-        cost: getOrderPrice(item),
-      })),
-    });
-
     const getOrderPrice = (order: Order) => {
       const dish = disheshInfo.find((dish) => dish.id === order.dishId);
 
@@ -205,6 +190,21 @@ export class SessionsService {
       }
       return returnPrice;
     };
+
+    const saveOrdersLogsToPrismaPromis = this.prisma.ordersLogs.createMany({
+      data: orderObjects.map((item) => ({
+        chefId: item.chefAssign,
+        dishId: item.dishId,
+        size: item.size,
+        waiterId: item.orderedBy,
+        fullQuantity: parseInt(item.fullQuantity),
+        halfQuantity: parseInt(item.halfQuantity),
+        user_description: item.user_description,
+        orderTimeStamp: item.createdAt,
+        sessionLogsUuid: sessionId,
+        cost: getOrderPrice(item),
+      })),
+    });
 
     const dateObje = new Date();
     const currentDate = new Date(
