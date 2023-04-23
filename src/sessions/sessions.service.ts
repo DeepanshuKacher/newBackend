@@ -18,7 +18,7 @@ import {
 import { mqttPublish } from "../useFullItems";
 import { CreateSessionDto } from "./dto/create-session.dto";
 import { PrismaService } from "src/prisma/prisma.service";
-import { GlobalPrismaFunctionsService } from "src/global-prisma-functions/global-prisma-functions.service";
+import { DateTime } from "luxon";
 
 @Injectable()
 export class SessionsService {
@@ -206,15 +206,6 @@ export class SessionsService {
       })),
     });
 
-    const dateObje = new Date();
-    const currentDate = new Date(
-      dateObje.getFullYear(),
-      dateObje.getMonth(),
-      dateObje.getDate(),
-      5,
-      30,
-    );
-
     const saveOrderDataToPrisma = this.prisma.ordersData.createMany({
       data: orderObjects.map((item) => ({
         dishId: item.dishId,
@@ -223,7 +214,7 @@ export class SessionsService {
         halfQuantity: parseInt(item.halfQuantity),
         cost: getOrderPrice(item),
         restaurantId: payload.restaurantId,
-        dateOfOrder: currentDate,
+        dateOfOrder: DateTime.now().setZone("Asia/Kolkata").startOf("day").toISO(),
       })),
     });
 
