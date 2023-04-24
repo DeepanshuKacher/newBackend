@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { RevenueDto } from "./dto/getRevenue.dto";
 import { JwtPayload_restaurantId } from "src/Interfaces";
-import { constants } from "src/useFullItems";
+import { DateTime } from "luxon";
 
 @Injectable()
 export class RevenueService {
@@ -20,8 +20,8 @@ export class RevenueService {
       where: {
         restaurantId: payload.restaurantId,
         dateOfOrder: {
-          gte: startDate,
-          lte: endDate,
+          gte: DateTime.fromISO(startDate).startOf("day").toISO(),
+          lte: DateTime.fromISO(endDate).startOf("day").toISO(),
         },
       },
       _sum: {
