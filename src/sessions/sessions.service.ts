@@ -214,7 +214,7 @@ export class SessionsService {
         halfQuantity: parseInt(item.halfQuantity),
         cost: getOrderPrice(item),
         restaurantId: payload.restaurantId,
-        dateOfOrder: DateTime.now().setZone("Asia/Kolkata").startOf("day").toISO(),
+        dateOfOrder: DateTime.now().setZone(constants.IndiaTimeZone).startOf("day").toISO(),
       })),
     });
 

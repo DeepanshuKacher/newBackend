@@ -19,6 +19,7 @@ import {
 } from "src/useFullItems";
 import { CartToOrderDTO } from "./dto/cart-to-order.dto";
 import { DeleteCartOrderDTO } from "./dto/delete-cart-order.dto";
+import { DateTime } from "luxon";
 
 @Injectable()
 export class CartService {
@@ -49,7 +50,7 @@ export class CartService {
       fullQuantity,
       halfQuantity,
       orderedBy: payload.userId,
-      createdAt: new Date().toISOString(),
+      createdAt: DateTime.now().setZone(constants.IndiaTimeZone).toISO(),
     });
 
     if (!(fullQuantity || halfQuantity)) throw new ForbiddenException();

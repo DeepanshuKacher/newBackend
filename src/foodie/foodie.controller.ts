@@ -7,7 +7,7 @@ import {
   Req,
   Res,
 } from "@nestjs/common";
-import { constants } from "src/useFullItems";
+import { constants, privateContstants } from "src/useFullItems";
 import { FoodieService } from "./foodie.service";
 import type { Request, Response } from "express";
 import { Public } from "src/decorators";
@@ -30,7 +30,7 @@ export class FoodieController {
   @Get(":restaurantId/:tableSectionId/:tableNumber")
   @Redirect(
     constants.IS_DEVELOPMENT
-      ? "http://192.168.43.48:3000"
+      ? `http://${privateContstants.development_url}:3000`
       : "https://foodie.eatrofoods.com",
   )
   createSession(

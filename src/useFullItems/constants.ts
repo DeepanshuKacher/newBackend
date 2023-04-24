@@ -12,12 +12,13 @@ const getConfig = (value: string) => {
   if (typeof data === "string") return data;
 };
 
-const workEnvironment = getConfig("NODE_ENV");
+const workEnvironment = getConfig("NODE_ENV"),
+  development_url = getConfig("development_url");
 
 const modifyRestroURL =
   workEnvironment === NodeEnvironment.PRODUCTION
     ? "https://modify-restaurants.eatrofoods.com"
-    : "http://192.168.43.48:3002";
+    : `http://${development_url}:3002`;
 
 export const constants = {
   OTP: "OTP",
@@ -36,12 +37,12 @@ export const constants = {
   globalDomain:
     workEnvironment === NodeEnvironment.PRODUCTION
       ? ".eatrofoods.com"
-      : "192.168.43.48",
+      : development_url,
 
   globalDomainForFoodie:
     workEnvironment === NodeEnvironment.PRODUCTION
       ? ".eatrofoods.com"
-      : "192.168.43.48",
+      : development_url,
 
   userType: "d7d-+r5",
   // useTypeManager: "kxEaaz7dtU",
@@ -69,6 +70,7 @@ export const constants = {
   },
   workerPassportPhoto: (mongodbId: string) => `${mongodbId}-passportPhoto`,
   workerIdentityPhoto: (mongodbId: string) => `${mongodbId}-identityPhoto`,
+  IndiaTimeZone: "Asia/Kolkata",
 };
 
 export const privateContstants = {
@@ -85,6 +87,7 @@ export const privateContstants = {
   workEnvironment,
   updateToken: "updateToken",
   clearData: "clearData",
+  development_url,
 };
 
 export const functionsObject = {

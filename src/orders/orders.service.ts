@@ -18,6 +18,7 @@ import {
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { UpdateOrderStatusDto } from "./dto/update-orderStatus.dto";
 import { PrismaService } from "src/prisma/prisma.service";
+import { DateTime } from "luxon";
 
 @Injectable()
 export class OrdersService {
@@ -52,7 +53,7 @@ export class OrdersService {
       throw new ConflictException();
 
     const orderId = randomUUID(),
-      currentDate = new Date().toISOString();
+      currentDate = DateTime.now().setZone(constants.IndiaTimeZone).toISO();
 
     const createOrderPromis = redis_create_Functions.createOrder({
       dishId,
