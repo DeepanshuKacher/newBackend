@@ -19,6 +19,7 @@ import { mqttPublish } from "../useFullItems";
 import { CreateSessionDto } from "./dto/create-session.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { DateTime } from "luxon";
+import { Prisma } from "@prisma/client";
 
 @Injectable()
 export class SessionsService {
@@ -191,32 +192,43 @@ export class SessionsService {
       return returnPrice;
     };
 
-    const saveOrdersLogsToPrismaPromis = this.prisma.ordersLogs.createMany({
-      data: orderObjects.map((item) => ({
-        chefId: item.chefAssign,
-        dishId: item.dishId,
-        size: item.size,
-        waiterId: item.orderedBy,
-        fullQuantity: parseInt(item.fullQuantity),
-        halfQuantity: parseInt(item.halfQuantity),
-        user_description: item.user_description,
-        orderTimeStamp: item.createdAt,
-        sessionLogsUuid: sessionId,
-        cost: getOrderPrice(item),
-      })),
-    });
+    let saveOrdersLogsToPrismaPromis:
+      | Prisma.PrismaPromise<Prisma.BatchPayload>
+      | undefined;
+    if (orderObjects.length > 0)
+      saveOrdersLogsToPrismaPromis = this.prisma.ordersLogs.createMany({
+        data: orderObjects.map((item) => ({
+          chefId: item.chefAssign,
+          dishId: item.dishId,
+          size: item.size,
+          waiterId: item.orderedBy === "self" ? null : item.orderedBy,
+          fullQuantity: parseInt(item.fullQuantity),
+          halfQuantity: parseInt(item.halfQuantity),
+          user_description: item.user_description,
+          orderTimeStamp: item.createdAt,
+          sessionLogsUuid: sessionId,
+          cost: getOrderPrice(item),
+        })),
+      });
 
-    const saveOrderDataToPrisma = this.prisma.ordersData.createMany({
-      data: orderObjects.map((item) => ({
-        dishId: item.dishId,
-        DishSize: item.size,
-        fullQuantity: parseInt(item.fullQuantity),
-        halfQuantity: parseInt(item.halfQuantity),
-        cost: getOrderPrice(item),
-        restaurantId: payload.restaurantId,
-        dateOfOrder: DateTime.now().setZone(constants.IndiaTimeZone).startOf("day").toISO(),
-      })),
-    });
+    let saveOrderDataToPrismaPromis:
+      | Prisma.PrismaPromise<Prisma.BatchPayload>
+      | undefined;
+    if (orderObjects.length > 0)
+      saveOrderDataToPrismaPromis = this.prisma.ordersData.createMany({
+        data: orderObjects.map((item) => ({
+          dishId: item.dishId,
+          DishSize: item.size,
+          fullQuantity: parseInt(item.fullQuantity),
+          halfQuantity: parseInt(item.halfQuantity),
+          cost: getOrderPrice(item),
+          restaurantId: payload.restaurantId,
+          dateOfOrder: DateTime.now()
+            .setZone(constants.IndiaTimeZone)
+            .startOf("day")
+            .toISO(),
+        })),
+      });
 
     const detachSessionFromTable = redisClient.HDEL(
       redisConstants.tablesStatusKey(payload.restaurantId),
@@ -235,7 +247,7 @@ export class SessionsService {
     try {
       await Promise.all([
         saveOrdersLogsToPrismaPromis,
-        saveOrderDataToPrisma,
+        saveOrderDataToPrismaPromis,
         detachSessionFromTable,
         deleteSession,
         deleteCart,

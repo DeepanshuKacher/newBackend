@@ -75,10 +75,19 @@ export class RestaurantsService {
 
     if (!userId) throw new ForbiddenException();
 
-    return this.prisma.owner.findUnique({
-      where: { id: userId },
-      select: { restaurants: { select: { city: true, name: true, id: true } } },
-    });
+    try {
+      return this.prisma.owner.findUnique({
+        where: { id: userId },
+        select: {
+          restaurants: { select: { city: true, name: true, id: true } },
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException(constants.InternalError, {
+        cause: error,
+      });
+    }
   }
 
   async restaurantDetail(

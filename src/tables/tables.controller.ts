@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from "@nestjs/common";
+import { Controller, Post, Body, Patch, Param, Delete } from "@nestjs/common";
 import { TablesService } from "./tables.service";
 import { CreateTableDto } from "./dto/create-table.dto";
 import { GetJwtPayload } from "src/decorators";
@@ -25,12 +17,19 @@ export class TablesController {
   }
 
   @Patch(":id")
-  update(@Param("id") id: string, @Body() updateTableDto: CreateTableDto) {
-    return this.tablesService.update(id, updateTableDto);
+  update(
+    @Param("id") id: string,
+    @Body() updateTableDto: CreateTableDto,
+    @GetJwtPayload() payload: JwtPayload_restaurantId,
+  ) {
+    return this.tablesService.update(id, updateTableDto, payload);
   }
 
   @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.tablesService.remove(id);
+  remove(
+    @Param("id") id: string,
+    @GetJwtPayload() payload: JwtPayload_restaurantId,
+  ) {
+    return this.tablesService.remove(id, payload);
   }
 }
