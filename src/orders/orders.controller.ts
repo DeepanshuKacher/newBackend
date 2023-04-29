@@ -12,6 +12,7 @@ import { CreateOrderDto } from "./dto/create-order.dto";
 import { GetJwtPayload } from "src/decorators";
 import { JwtPayload_restaurantId } from "src/Interfaces";
 import { UpdateOrderStatusDto } from "./dto/update-orderStatus.dto";
+import { DeleteOrderDto } from "./dto/delete-order.dto";
 
 @Controller("orders")
 export class OrdersController {
@@ -57,5 +58,10 @@ export class OrdersController {
     @GetJwtPayload() payload: JwtPayload_restaurantId,
   ) {
     return this.ordersService.completeOrder(payload, dto);
+  }
+
+  @Delete("order")
+  deleteOrder(@Body() dto: DeleteOrderDto) {
+    return this.ordersService.deleteOrder(dto);
   }
 }

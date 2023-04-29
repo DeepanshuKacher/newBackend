@@ -19,6 +19,7 @@ import { CreateOrderDto } from "./dto/create-order.dto";
 import { UpdateOrderStatusDto } from "./dto/update-orderStatus.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { DateTime } from "luxon";
+import { DeleteOrderDto } from "./dto/delete-order.dto";
 
 @Injectable()
 export class OrdersService {
@@ -271,5 +272,22 @@ export class OrdersService {
           },
         });
     }
+  }
+
+  async deleteOrder(dto: DeleteOrderDto) {
+    const { orderId, sessionId } = dto;
+    // const sessionOrders = await redisGetFunction.orderKeysArrayFromSessionUUID(
+    //   sessionId,
+    // );
+
+    await redisClient.lRem(
+      redisConstants.sessionKey(sessionId),
+      1,
+      redisConstants.orderKey(orderId),
+    );
+
+    return constants.OK;
+
+    // console.log({ sessionOrders, orderId: redisConstants.orderKey(orderId) });
   }
 }

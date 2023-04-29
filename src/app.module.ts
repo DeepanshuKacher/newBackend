@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { PrismaModule } from "./prisma/prisma.module";
-import { OwnerModule } from "./owner/owner.module";
 import { ConfigModule } from "@nestjs/config";
 import { AuthModule } from "./auth/auth.module";
 import { RestaurantsModule } from "./restaurants/restaurants.module";
@@ -17,16 +16,14 @@ import { ChefsModule } from "./chefs/chefs.module";
 import { CartModule } from "./cart/cart.module";
 import { RestaurantSettingModule } from "./restaurant-setting/restaurant-setting.module";
 import { FoodieModule } from "./foodie/foodie.module";
-import { RestaurantsignupModule } from "./restaurantsignup/restaurantsignup.module";
 import { GlobalPrismaFunctionsModule } from "./global-prisma-functions/global-prisma-functions.module";
 import { RevenueModule } from "./analysis/revenue/revenue.module";
-import { ManagerOwnerModule } from "./manager-owner/manager-owner.module";
 import { DishModule } from "./analysis/dish/dish.module";
+import { ManagerModule } from './manager/manager.module';
 
 @Module({
   imports: [
     PrismaModule,
-    OwnerModule,
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     RestaurantsModule,
@@ -43,11 +40,10 @@ import { DishModule } from "./analysis/dish/dish.module";
     CartModule,
     RestaurantSettingModule,
     FoodieModule,
-    RestaurantsignupModule,
     GlobalPrismaFunctionsModule,
     RevenueModule,
-    ManagerOwnerModule,
     DishModule,
+    ManagerModule,
   ],
 })
 export class AppModule {}

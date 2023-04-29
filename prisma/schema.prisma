@@ -25,6 +25,21 @@ model Owner {
   // defaultRestaurant Restaurant? @relation(name: "defaultRestaurant")
 }
 
+model Manager {
+  id         String  @id @default(auto()) @map("_id") @db.ObjectId
+  firstName  String
+  middleName String?
+  lastName   String
+  email      String  @unique
+  hash       String
+
+  createdAt DateTime @default(now())
+  updatedAd DateTime @updatedAt
+
+  Restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId String     @db.ObjectId
+}
+
 model Restaurant {
   id        String @id @default(auto()) @map("_id") @db.ObjectId
   name      String
@@ -39,6 +54,8 @@ model Restaurant {
   tables Table[]
 
   waiters Waiter[]
+
+  manager Manager[]
 
   chefs Chef[]
 

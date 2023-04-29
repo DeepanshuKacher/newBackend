@@ -6,12 +6,17 @@ import {
   HttpException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { CreateOwnerDto } from "src/owner/dto";
 import * as argon from "argon2";
 import { PrismaService } from "src/prisma/prisma.service";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
 import { JwtPayload_restaurantId } from "../Interfaces";
-import { EmailDto, GetJwtDto, SignInDto, UserType } from "./dto";
+import {
+  CreateOwnerDto,
+  EmailDto,
+  GetJwtDto,
+  SignInDto,
+  UserType,
+} from "./dto";
 import { redisClient, constants, redisConstants } from "../useFullItems";
 import type { Response, Request } from "express";
 import { ConfigService } from "@nestjs/config";
