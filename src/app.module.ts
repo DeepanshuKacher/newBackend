@@ -19,7 +19,9 @@ import { FoodieModule } from "./foodie/foodie.module";
 import { GlobalPrismaFunctionsModule } from "./global-prisma-functions/global-prisma-functions.module";
 import { RevenueModule } from "./analysis/revenue/revenue.module";
 import { DishModule } from "./analysis/dish/dish.module";
-import { ManagerModule } from './manager/manager.module';
+import { ManagerModule } from "./manager/manager.module";
+import { KotModule } from "./kot/kot.module";
+import { TemplatesModule } from "./restaurant-stuff/templates/templates.module";
 
 @Module({
   imports: [
@@ -44,6 +46,8 @@ import { ManagerModule } from './manager/manager.module';
     RevenueModule,
     DishModule,
     ManagerModule,
+    KotModule,
+    TemplatesModule,
   ],
 })
 export class AppModule {}

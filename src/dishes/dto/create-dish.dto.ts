@@ -4,9 +4,21 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  ValidateNested,
 } from "class-validator";
 
 import { Type } from "class-transformer";
+
+type QuantityPrice = {
+  half?: number;
+  full?: number;
+};
+
+type SizePrice = {
+  large?: QuantityPrice;
+  medium?: QuantityPrice;
+  small?: QuantityPrice;
+};
 
 export class CreateDishDto {
   @IsString()

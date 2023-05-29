@@ -209,12 +209,6 @@ export class ChefsService {
         throw new InternalServerErrorException();
       });
 
-    console.log({
-      accessToken,
-      selfDetail: { name: restaurantDetail.name, id: restaurantDetail.id },
-      restaurantDetail: restaurantDetail.Restaurant,
-    });
-
     return {
       accessToken,
       selfDetail: { name: restaurantDetail.name, id: restaurantDetail.id },

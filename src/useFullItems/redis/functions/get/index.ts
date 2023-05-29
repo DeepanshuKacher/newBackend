@@ -3,6 +3,10 @@ import { redisClient } from "../../redisClient";
 import {
   getOrdersObjectFromSessionUUID,
   getTableInfoFromSessionUUID,
+  kotContainerItemsKey_Today,
+  kotContainerItemsKey_YesterDay,
+  orderKeysFromKot,
+  ordersKeyFromKotContainer,
 } from "./getFunctions";
 
 export const redisGetFunction = {
@@ -34,4 +38,12 @@ export const redisGetFunction = {
   getOrdersObjectFromSessionUUID,
 
   getTableInfoFromSessionUUID,
+
+  orderKeysFromKot,
+
+  ordersKeyFromKotContainer,
+
+  kotContainerItemsKey_Today,
+
+  kotContainerItemsKey_YesterDay,
 };

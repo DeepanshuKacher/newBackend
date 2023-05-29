@@ -4,6 +4,7 @@ import { AuthService } from "./auth.service";
 import { CreateOwnerDto, EmailDto, GetJwtDto, SignInDto } from "./dto";
 import { Request, Response } from "express";
 import { constants } from "src/useFullItems";
+import { ResetPasswordDto, ResetPasswordFinal } from "./dto/resetPassword.dto";
 
 @Public()
 @Controller("auth")
@@ -32,5 +33,15 @@ export class AuthController {
   @Post("mailotp")
   async sendMail(@Body() email: EmailDto) {
     return this.authservice.verifyemail(email);
+  }
+
+  @Post("resetPasswordRequest")
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authservice.resetPasswordInitiate(dto);
+  }
+
+  @Post("passwordReset")
+  resetPasswordFinal(@Body() dto: ResetPasswordFinal) {
+    return this.authservice.completePasswordReset(dto);
   }
 }

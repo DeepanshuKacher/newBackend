@@ -34,3 +34,53 @@ export const getTableInfoFromSessionUUID = async (
     }
   }
 };
+
+export const kotContainerItemsKey_Today = (restaurantId: string) =>
+  redisClient.lRange(
+    redisConstants.restaurant_KOT_Container_Today_Key(restaurantId),
+    0,
+    -1,
+  );
+export const kotContainerItemsKey_YesterDay = (restaurantId: string) =>
+  redisClient.lRange(
+    redisConstants.restaurant_KOT_Container_Yesterday_Key(restaurantId),
+    0,
+    -1,
+  );
+
+export const orderKeysFromKot = (
+  kotKeyOrKotUUID: "key" | "uuid",
+  kotId: string,
+) => {
+  switch (kotKeyOrKotUUID) {
+    case "key":
+      return redisClient.lRange(kotId, 0, -1);
+    case "uuid":
+      return redisClient.lRange(redisConstants.kot_key(kotId), 0, -1);
+  }
+};
+
+export const ordersKeyFromKotContainer = async (
+  restaurantId: string,
+  includeYesterday: boolean,
+) => {
+  let kotKeys = await kotContainerItemsKey_Today(restaurantId);
+
+  if (includeYesterday === true) {
+    const yesterdayKotKeys = await kotContainerItemsKey_YesterDay(restaurantId);
+
+    kotKeys = [...yesterdayKotKeys, ...kotKeys];
+  }
+
+  // console.log({ kotKeys });
+
+  const promisContainer = [];
+
+  for (const iterator of kotKeys) {
+    const arrayOfOrderKeysPromis = orderKeysFromKot("key", iterator);
+
+    promisContainer.push(arrayOfOrderKeysPromis);
+  }
+
+  return await Promise.all(promisContainer); // sending order key array
+};

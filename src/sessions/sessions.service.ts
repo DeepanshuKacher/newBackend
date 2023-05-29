@@ -161,12 +161,7 @@ export class SessionsService {
       },
       select: {
         id: true,
-        FullLarge_Price: true,
-        FullMedium_Price: true,
-        FullSmall_Price: true,
-        HalfLarge_Price: true,
-        HalfMedium_Price: true,
-        HalfSmall_Price: true,
+        price: true,
       },
     });
 
@@ -179,16 +174,19 @@ export class SessionsService {
 
       let returnPrice = 0;
 
-      if (size === "Large") {
-        returnPrice = (fullQuantity || 0) * (dish?.FullLarge_Price || 0);
-        returnPrice += (halfQuantity || 0) * (dish?.HalfLarge_Price || 0);
-      } else if (size === "Medium") {
-        returnPrice = (fullQuantity || 0) * (dish?.FullMedium_Price || 0);
-        returnPrice += (halfQuantity || 0) * (dish?.HalfMedium_Price || 0);
-      } else if (size === "Small") {
-        returnPrice = (fullQuantity || 0) * (dish?.FullSmall_Price || 0);
-        returnPrice += (halfQuantity || 0) * (dish?.HalfSmall_Price || 0);
-      }
+      returnPrice = (fullQuantity || 0) * (dish.price[size].full || 0);
+      returnPrice += (halfQuantity || 0) * (dish.price[size].half || 0);
+
+      // if (size === "Large") {
+      //   returnPrice = (fullQuantity || 0) * (dish?.price.large?.full || 0);
+      //   returnPrice += (halfQuantity || 0) * (dish?.price.large?.half || 0);
+      // } else if (size === "Medium") {
+      //   returnPrice = (fullQuantity || 0) * (dish?.price.medium?.full || 0);
+      //   returnPrice += (halfQuantity || 0) * (dish?.price?.medium?.half || 0);
+      // } else if (size === "Small") {
+      //   returnPrice = (fullQuantity || 0) * (dish?.price?.small?.full || 0);
+      //   returnPrice += (halfQuantity || 0) * (dish?.price?.small?.half || 0);
+      // }
       return returnPrice;
     };
 

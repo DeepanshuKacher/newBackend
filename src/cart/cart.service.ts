@@ -142,11 +142,27 @@ export class CartService {
       ),
       orderKeys,
     );
+
+    const randomUUID_forKot = randomUUID();
+
+    const createKotPromise = redis_create_Functions.kot(
+      randomUUID_forKot,
+      cartOrders,
+    );
+
+    const pushKotToRestaurantContainerPromise =
+      redis_create_Functions.restaurantKotContainerPush(
+        payload.restaurantId,
+        redisConstants.kot_key(randomUUID_forKot),
+      );
+
     try {
       const [pushOrderToTableSession, pushOrderToRestaurantContainer] =
         await Promise.all([
           pushOrderToTableSessionPromis,
           pushOrderToRestaurantContainerPromis,
+          createKotPromise,
+          pushKotToRestaurantContainerPromise,
         ]);
 
       await redisClient.DEL(redisConstants.cartSessionKey(tableSessionId));

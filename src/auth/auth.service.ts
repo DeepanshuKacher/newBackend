@@ -4,6 +4,9 @@ import {
   InternalServerErrorException,
   NotFoundException,
   HttpException,
+  UnauthorizedException,
+  ConflictException,
+  NotAcceptableException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import * as argon from "argon2";
@@ -22,13 +25,13 @@ import type { Response, Request } from "express";
 import { ConfigService } from "@nestjs/config";
 import { MailServiceService } from "src/mail-service/mail-service.service";
 import { randomUUID } from "crypto";
+import { ResetPasswordDto, ResetPasswordFinal } from "./dto/resetPassword.dto";
 
 @Injectable()
 export class AuthService {
   constructor(
-    private jwt: JwtService,
+    private readonly jwt: JwtService,
     private readonly prisma: PrismaService,
-    private config: ConfigService,
     private readonly mailService: MailServiceService,
   ) {}
 
@@ -221,4 +224,111 @@ export class AuthService {
 
   //   return constants.OK;
   // }
+
+  async resetPasswordInitiate(dto: ResetPasswordDto) {
+    const { email, userType } = dto;
+    /* Owner Manager    */
+
+    let userEmail: string;
+
+    // check for owner or manager
+
+    switch (userType) {
+      case "Owner":
+        userEmail = (
+          await this.prisma.owner.findUnique({
+            where: {
+              email,
+            },
+            select: {
+              email: true,
+            },
+          })
+        )?.email;
+
+        break;
+
+      case "Manager":
+        userEmail = (
+          await this.prisma.manager.findUnique({
+            where: {
+              email,
+            },
+            select: {
+              email: true,
+            },
+          })
+        ).email;
+        break;
+    }
+
+    if (!userEmail) throw new NotFoundException();
+
+    const otp = constants.workerTokenGenerator(6);
+
+    const sendMailPromise = this.mailService.sendMail(
+      userEmail,
+      `Reset password otp is ${otp} \n valid for 5 minutes`,
+    );
+
+    const otpRedisSetPromise = redisClient.SET(
+      `resetPassword-${userEmail}`,
+      otp,
+      {
+        EX: 60 * 5,
+      },
+    );
+
+    try {
+      await Promise.all([sendMailPromise, otpRedisSetPromise]);
+
+      return constants.OK;
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException();
+    }
+    // check if owner or manager existed
+    //send otp
+  }
+
+  async completePasswordReset(dto: ResetPasswordFinal) {
+    const { email, otp, password, userType } = dto;
+
+    const getRedisOtp = await redisClient.GET(`resetPassword-${email}`);
+
+    if (getRedisOtp !== otp) throw new ForbiddenException();
+
+    try {
+      await redisClient.DEL(`resetPassword-${email}`);
+
+      const hashPassword = await argon.hash(password);
+
+      if (userType === "Owner")
+        await this.prisma.owner.update({
+          where: {
+            email,
+          },
+          data: {
+            hash: hashPassword,
+          },
+        });
+      else if (userType === "Manager")
+        await this.prisma.manager.update({
+          where: {
+            email,
+          },
+          data: {
+            hash: hashPassword,
+          },
+        });
+      else {
+        throw new Error("Not manager neither owner");
+      }
+
+      return constants.OK;
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException();
+    }
+  }
 }

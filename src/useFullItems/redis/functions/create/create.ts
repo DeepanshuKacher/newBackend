@@ -1,15 +1,15 @@
-import { redisClient } from "../redisClient";
+import { redisClient } from "../../redisClient";
 import {
   orderConstants,
   redisConstants,
   redisKeyExpiry,
-  dayTracker,
-} from "../constants";
+} from "../../constants";
+import { kot, restaurantKotContainerPush } from "./functions";
 
 enum Size {
-  Large = "Large",
-  Medium = "Medium",
-  Small = "Small",
+  Large = "large",
+  Medium = "medium",
+  Small = "small",
 }
 
 export type Order = {
@@ -63,36 +63,35 @@ export const redis_create_Functions = {
       }),
 
   createOrder: (props: OrderProps) =>
-    redisClient
-      .HSET(redisConstants.orderKey(props.orderId), [
-        orderConstants.dishId,
-        props.dishId,
-        orderConstants.orderId,
-        props.orderId,
-        orderConstants.tableNumber,
-        props.tableNumber,
-        orderConstants.tableSectionId,
-        props.tableSectionId,
-        orderConstants.user_description,
-        props.user_description,
-        orderConstants.orderedBy,
-        props.orderedBy,
-        orderConstants.size,
-        props.size,
-        orderConstants.fullQuantity,
-        props.fullQuantity || 0,
-        orderConstants.halfQuantity,
-        props.halfQuantity || 0,
-        orderConstants.createdAt,
-        props.createdAt,
-      ]),
-      // .then(() =>
-      //   redisClient.EXPIRE(
-      //     redisConstants.orderKey(props.orderId),
-      //     redisKeyExpiry.orderKey,
-      //     "NX",
-      //   ),
-      // ),
+    redisClient.HSET(redisConstants.orderKey(props.orderId), [
+      orderConstants.dishId,
+      props.dishId,
+      orderConstants.orderId,
+      props.orderId,
+      orderConstants.tableNumber,
+      props.tableNumber,
+      orderConstants.tableSectionId,
+      props.tableSectionId,
+      orderConstants.user_description,
+      props.user_description,
+      orderConstants.orderedBy,
+      props.orderedBy,
+      orderConstants.size,
+      props.size,
+      orderConstants.fullQuantity,
+      props.fullQuantity || 0,
+      orderConstants.halfQuantity,
+      props.halfQuantity || 0,
+      orderConstants.createdAt,
+      props.createdAt,
+    ]),
+  // .then(() =>
+  //   redisClient.EXPIRE(
+  //     redisConstants.orderKey(props.orderId),
+  //     redisKeyExpiry.orderKey,
+  //     "NX",
+  //   ),
+  // ),
 
   tableStatus: (
     restaurantId: string,
@@ -114,4 +113,7 @@ export const redis_create_Functions = {
       redisConstants.cartSessionKey(sessionId),
       redisConstants.orderKey(orderId),
     ),
+
+  restaurantKotContainerPush,
+  kot,
 };

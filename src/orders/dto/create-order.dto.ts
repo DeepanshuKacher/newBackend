@@ -11,9 +11,9 @@ import {
 } from "class-validator";
 
 export enum Size {
-  Large = "Large",
-  Medium = "Medium",
-  Small = "Small",
+  Large = "large",
+  Medium = "medium",
+  Small = "small",
 }
 
 export class CreateOrderDto {

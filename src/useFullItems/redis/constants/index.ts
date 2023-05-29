@@ -3,37 +3,22 @@ import { Order } from "../functions";
 import { DateTime } from "luxon";
 import { constants } from "src/useFullItems/constants";
 
-// const getYesterday = () => {
-//   const currentDate = new Date();
-//   const getTodaysDate = currentDate.getDate();
-//   if (getTodaysDate === 1) {
-//     const getCurrentMonth = currentDate.getMonth() + 1; //because jan is 0 and dec is 11
-//     if (getCurrentMonth === 1) return 31;
-//     else {
-//       return new Date(
-//         currentDate.getFullYear(),
-//         getCurrentMonth - 1,
-//         0,
-//         5,
-//         30,
-//       ).getDate();
-//     }
-//   } else {
-//     return getTodaysDate - 1;
-//   }
-// };
-
 const dayTrackerHOF_Function = () => {
   const dayTracker: { today: number; yesterday: number } = {
     today: DateTime.now().setZone(constants.IndiaTimeZone).get("day"),
-    yesterday: DateTime.now().setZone(constants.IndiaTimeZone).minus({ day: 1 }).get("day"),
+    yesterday: DateTime.now()
+      .setZone(constants.IndiaTimeZone)
+      .minus({ day: 1 })
+      .get("day"),
   };
 
   new CronJob(
     "0 0 0 * * *",
     function () {
       dayTracker.yesterday = dayTracker.today;
-      dayTracker.today = DateTime.now().setZone(constants.IndiaTimeZone).get('day');
+      dayTracker.today = DateTime.now()
+        .setZone(constants.IndiaTimeZone)
+        .get("day");
     },
     null,
     true,
@@ -68,6 +53,14 @@ export const redisConstants = {
     `${restaurantId}:${dayTracker("Yesterday")}:OrdersContainer`,
 
   cartSessionKey: (sessionUUID: string) => `${sessionUUID}:cart`,
+
+  restaurant_KOT_Container_Today_Key: (restaurantId: string) =>
+    `${restaurantId}:${dayTracker("Today")}:KotContainer`,
+
+  restaurant_KOT_Container_Yesterday_Key: (restaurantId: string) =>
+    `${restaurantId}:${dayTracker("Yesterday")}:KotContainer`,
+
+  kot_key: (kotUUID: string) => `${kotUUID}:kot`,
 };
 
 export const redisKeyExpiry = {
@@ -76,10 +69,6 @@ export const redisKeyExpiry = {
   restaurantRealtimeOrdersContainerKey: 60 * 60 * 48,
   // cartSession: 60 * 60 * 24,finish them imitiately after session is finish
 };
-
-// export const redisFunctions = {
-//   createOrder: (orderUUID:string) => redisClient.HSET(redisConstants.orderKey(orderUUID),[])
-// };
 
 export const orderConstants: Omit<Order, "size"> & { size: string } = {
   dishId: "dishId",

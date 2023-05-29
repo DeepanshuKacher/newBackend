@@ -58,9 +58,9 @@ export const constants = {
       constants.s3Bucket
     }/${privateContstants.objectKey(restaurantId, name)}`,
 
-  workerTokenGenerator: () => {
+  workerTokenGenerator: (length?: number) => {
     let chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-      passwordLength = 9,
+      passwordLength = length || 9,
       password = "";
     for (var i = 0; i <= passwordLength; i++) {
       var randomNumber = Math.floor(Math.random() * chars.length);

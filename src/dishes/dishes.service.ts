@@ -26,13 +26,29 @@ export class DishesService {
   async create_bulkDish_withoutImage() {}
 
   async createDish(dto: CreateDishDto, restaurantId: string, image?: string) {
+    const returnDishValue = (fullPrice: number, halfPrice: number) => {
+      if (!(fullPrice || halfPrice)) return null;
+
+      return {
+        full: fullPrice ? fullPrice : null,
+        half: halfPrice ? halfPrice : null,
+      };
+    };
     const updateCommitIdPromis =
       this.globalPrismaFunctions.updateRestaurantCommitUUID(restaurantId);
+
     const createDishPromis = this.prisma.dish.create({
       data: {
-        ...dto,
-        restaurantId,
+        name: dto.name,
+        description: dto.description,
         imageUrl: image,
+        price: {
+          large: returnDishValue(dto.FullLarge_Price, dto.HalfLarge_Price),
+          medium: returnDishValue(dto.FullMedium_Price, dto.HalfMedium_Price),
+          small: returnDishValue(dto.FullSmall_Price, dto.HalfSmall_Price),
+        },
+        dishSectionId: dto.dishSectionId,
+        restaurantId,
       },
     });
 

@@ -14,12 +14,14 @@ import {
   redisConstants,
   redisGetFunction,
   redis_create_Functions,
+  redis_update_functions,
 } from "src/useFullItems";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { UpdateOrderStatusDto } from "./dto/update-orderStatus.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { DateTime } from "luxon";
 import { DeleteOrderDto } from "./dto/delete-order.dto";
+import { UpdateOrderDto } from "./dto/update-order.dto";
 
 @Injectable()
 export class OrdersService {
@@ -80,6 +82,16 @@ export class OrdersService {
         orderId,
       );
 
+    const createKotPromise = redis_create_Functions.kot(orderId, [
+      redisConstants.orderKey(orderId),
+    ]);
+
+    const pushKotToRestaurantContainerPromise =
+      redis_create_Functions.restaurantKotContainerPush(
+        payload.restaurantId,
+        redisConstants.kot_key(orderId),
+      );
+
     try {
       const [
         createOrder,
@@ -89,6 +101,8 @@ export class OrdersService {
         createOrderPromis,
         pushOrderToTableSessionPromis,
         pushOrderToRestaurantContainerPromis,
+        createKotPromise,
+        pushKotToRestaurantContainerPromise,
       ]);
 
       mqttPublish.dishOrder({
@@ -289,5 +303,28 @@ export class OrdersService {
     return constants.OK;
 
     // console.log({ sessionOrders, orderId: redisConstants.orderKey(orderId) });
+  }
+  async updateOrder(dto: UpdateOrderDto) {
+    const { orderId, fullQuantity, halfQuantity } = dto;
+
+    if (fullQuantity)
+      // const fullQuantityUpdate =
+      await redis_update_functions.updateOrderQuantity(
+        orderId,
+        "fullQuantity",
+        fullQuantity,
+      );
+
+    if (halfQuantity)
+      // const halfQuantityUpdate =
+      await redis_update_functions.updateOrderQuantity(
+        orderId,
+        "halfQuantity",
+        halfQuantity,
+      );
+
+    // await Promise.all([fullQuantityUpdatePromis, halfQuantityUpdatePromis]);
+
+    return constants.OK;
   }
 }

@@ -10,6 +10,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// owner
 model Owner {
   id          String       @id @default(auto()) @map("_id") @db.ObjectId
   firstName   String
@@ -25,6 +26,7 @@ model Owner {
   // defaultRestaurant Restaurant? @relation(name: "defaultRestaurant")
 }
 
+// restaurant staff
 model Manager {
   id         String  @id @default(auto()) @map("_id") @db.ObjectId
   firstName  String
@@ -38,111 +40,6 @@ model Manager {
 
   Restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   restaurantId String     @db.ObjectId
-}
-
-model Restaurant {
-  id        String @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  state     String
-  city      String
-  latitude  Float
-  longitude Float
-
-  dishesh     Dish[]
-  dishSection DishSection[]
-
-  tables Table[]
-
-  waiters Waiter[]
-
-  manager Manager[]
-
-  chefs Chef[]
-
-  orderData OrdersData[]
-
-  sessionLogs SessionLogs[]
-
-  owner   Owner  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  ownerId String @db.ObjectId
-
-  createdAt DateTime @default(now())
-  updatedAd DateTime @updatedAt
-
-  restaurantSettingForWaiter RestaurantSettings_Waiter?
-
-  // defaultOwner   Owner?  @relation(fields: [defaultOwnerId], references: [id], name: "defaultRestaurant")
-  // defaultOwnerId String? @unique @db.ObjectId
-
-  commitToken String? //this is important
-}
-
-type RestaurantSettings_Waiter {
-  allowWaiterToClearSession Boolean @default(false)
-}
-
-model DishSection {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
-  sectionName String
-
-  dishesh Dish[]
-
-  Restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  restaurantId String     @db.ObjectId
-}
-
-type AddOns {
-  name  String
-  price Int
-}
-
-type QuantityPrice {
-  half Int?
-  full Int?
-}
-
-type SizePrice {
-  large  QuantityPrice?
-  medium QuantityPrice?
-  small  QuantityPrice?
-}
-
-model Dish {
-  id               String     @id @default(auto()) @map("_id") @db.ObjectId
-  name             String
-  description      String?
-  imageUrl         String?
-  addOns           AddOns[]
-  FullLarge_Price  Int?
-  FullMedium_Price Int?
-  FullSmall_Price  Int?
-  HalfLarge_Price  Int?
-  HalfMedium_Price Int?
-  HalfSmall_Price  Int?
-  Price            SizePrice?
-
-  available Boolean @default(true)
-
-  DishSection   DishSection @relation(fields: [dishSectionId], references: [id], onDelete: Cascade)
-  dishSectionId String      @db.ObjectId
-
-  Restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  restaurantId String     @db.ObjectId
-
-  OrdersData OrdersData[]
-  Order_Logs OrdersLogs[]
-}
-
-model Table {
-  id           String        @id @default(auto()) @map("_id") @db.ObjectId
-  name         String
-  prefix       String?
-  suffix       String?
-  startNumber  Int
-  endNumber    Int
-  Restaurant   Restaurant    @relation(fields: [restaurantId], references: [id])
-  restaurantId String        @db.ObjectId
-  SessionLogs  SessionLogs[]
 }
 
 model Waiter {
@@ -186,11 +83,142 @@ model Chef {
   Order_Logs   OrdersLogs[]
 }
 
-// order data
+// restaurant
+model Restaurant {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  state     String
+  city      String
+  latitude  Float
+  longitude Float
+
+  dishesh     Dish[]
+  dishSection DishSection[]
+
+  tables Table[]
+
+  waiters Waiter[]
+
+  manager Manager[]
+
+  chefs Chef[]
+
+  orderData OrdersData[]
+
+  sessionLogs SessionLogs[]
+
+  owner   Owner  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId String @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAd DateTime @updatedAt
+
+  restaurantSettingForWaiter RestaurantSettings_Waiter?
+
+  // defaultOwner   Owner?  @relation(fields: [defaultOwnerId], references: [id], name: "defaultRestaurant")
+  // defaultOwnerId String? @unique @db.ObjectId
+
+  commitToken       String? //this is important
+  billPrintTemplate BillPrintTemplate?
+}
+
+type RestaurantSettings_Waiter {
+  allowWaiterToClearSession Boolean @default(false)
+}
+
+// restaurant stuff
+
+model DishSection {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  sectionName String
+
+  dishesh Dish[]
+
+  Restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId String     @db.ObjectId
+}
+
+type AddOns {
+  name  String
+  price Int
+}
+
+type QuantityPrice {
+  half Int?
+  full Int?
+}
+
+type SizePrice {
+  large  QuantityPrice?
+  medium QuantityPrice?
+  small  QuantityPrice?
+}
+
+model Dish {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  imageUrl    String?
+  addOns      AddOns[]
+  price       SizePrice
+
+  available Boolean @default(true)
+
+  DishSection   DishSection @relation(fields: [dishSectionId], references: [id], onDelete: Cascade)
+  dishSectionId String      @db.ObjectId
+
+  Restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId String     @db.ObjectId
+
+  OrdersData OrdersData[]
+  Order_Logs OrdersLogs[]
+}
+
+model Table {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  prefix       String?
+  suffix       String?
+  startNumber  Int
+  endNumber    Int
+  Restaurant   Restaurant    @relation(fields: [restaurantId], references: [id])
+  restaurantId String        @db.ObjectId
+  SessionLogs  SessionLogs[]
+}
+
+enum OperationType {
+  Plus
+  Minus
+  Multiply
+  Divide
+  Percentage
+}
+
+enum GainLoss {
+  gain
+  loss
+}
+
+type Operations {
+  label     String
+  number    Float
+  operation OperationType
+  gainLoss  GainLoss
+}
+
+model BillPrintTemplate {
+  id               String       @id @default(auto()) @map("_id") @db.ObjectId
+  restaurant       Restaurant   @relation(fields: [restaurantId], references: [id])
+  restaurantId     String       @unique @db.ObjectId
+  upperSectionText String?
+  operations       Operations[]
+}
+
+// order stuff
 enum DishSize {
-  Large
-  Medium
-  Small
+  large
+  medium
+  small
 }
 
 model OrdersData {
