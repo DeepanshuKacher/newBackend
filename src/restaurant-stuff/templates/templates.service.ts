@@ -15,22 +15,38 @@ export class TemplatesService {
     const { restaurantId, userId, userType } = payload;
     const { operations, upperSectionText } = createTemplateDto;
 
-    await this.prisma.billPrintTemplate.upsert({
-      where: {
-        restaurantId,
-      },
-      update: {
-        operations: {
-          push: operations,
+    if (operations) {
+      await this.prisma.billPrintTemplate.upsert({
+        where: {
+          restaurantId,
         },
-        upperSectionText,
-      },
-      create: {
-        operations,
-        upperSectionText,
-        restaurantId,
-      },
-    });
+        update: {
+          operations: {
+            push: operations,
+          },
+          upperSectionText,
+        },
+        create: {
+          operations,
+          upperSectionText,
+          restaurantId,
+        },
+      });
+    } else {
+      await this.prisma.billPrintTemplate.upsert({
+        where: {
+          restaurantId,
+        },
+        update: {
+          upperSectionText,
+        },
+        create: {
+          operations,
+          upperSectionText,
+          restaurantId,
+        },
+      });
+    }
 
     return constants.OK;
   }
