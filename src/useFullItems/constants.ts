@@ -80,7 +80,6 @@ export const privateContstants = {
   s3Region: getConfig("s3Region"),
   s3AccessKeyId: getConfig("s3AccessKeyId"),
   s3SecretAccessKey: getConfig("s3SecretAccessKey"),
-  // MONGODB_DATABASE_URL: getConfig("DATABASE_URL"),
   JWT_SECRET: getConfig("JWT_SECRET"),
   REDIS_URL: getConfig("REDIS_URL"),
   REDIS_PASSWORD: getConfig("REDIS_PASSWORD"),

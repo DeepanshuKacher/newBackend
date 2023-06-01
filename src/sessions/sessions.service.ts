@@ -170,12 +170,12 @@ export class SessionsService {
 
       const fullQuantity = parseInt(order.fullQuantity),
         halfQuantity = parseInt(order.halfQuantity),
-        size = order.size;
+        size = order?.size;
 
       let returnPrice = 0;
 
-      returnPrice = (fullQuantity || 0) * (dish.price[size].full || 0);
-      returnPrice += (halfQuantity || 0) * (dish.price[size].half || 0);
+      returnPrice = (fullQuantity || 0) * (dish?.price?.[size]?.full || 0);
+      returnPrice += (halfQuantity || 0) * (dish?.price?.[size]?.half || 0);
 
       // if (size === "Large") {
       //   returnPrice = (fullQuantity || 0) * (dish?.price.large?.full || 0);
