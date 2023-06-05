@@ -280,4 +280,22 @@ export class SessionsService {
       });
     }
   }
+
+  async closeSessionNotificationGenerator(
+    createSessionDto: CreateSessionDto,
+    payload: JwtPayload_restaurantId,
+  ) {
+    try {
+      mqttPublish.generateBillNotification(
+        payload.restaurantId,
+        createSessionDto.tableNumber,
+        createSessionDto.tableSectionId,
+      );
+
+      return constants.OK;
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException();
+    }
+  }
 }

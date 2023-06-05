@@ -31,6 +31,17 @@ export class SessionsController {
     return this.sessionsService.create(createSessionDto, payload);
   }
 
+  @Post("closeNotification")
+  clearSessionNotificationGenerator(
+    @Body() createSessionDto: CreateSessionDto,
+    @GetJwtPayload() payload: JwtPayload_restaurantId,
+  ) {
+    return this.sessionsService.closeSessionNotificationGenerator(
+      createSessionDto,
+      payload,
+    );
+  }
+
   @Delete(":sessionId")
   clearSession(
     @Param("sessionId") id: string,

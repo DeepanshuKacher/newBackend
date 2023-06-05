@@ -75,11 +75,13 @@ export class TablesService {
       this.globalPrismaFunction.updateRestaurantCommitUUID(
         payload.restaurantId,
       );
+
     try {
       await Promise.all([updateRestaurantCommitUUIDPromis, deleteTablePromis]);
 
       return constants.OK;
     } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException(constants.InternalError, {
         cause: error,
       });

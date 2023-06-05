@@ -13,6 +13,7 @@ const mqttPayloadCode = {
   dishOrder: "dishOrder",
   updateOrder: "updateOrder",
   cardDishOrder: "cardDishOrder",
+  sessionClose: "sessionClose",
 };
 
 const formatPayload = (code: keyof typeof mqttPayloadCode, message: any) =>
@@ -92,6 +93,9 @@ const mqttMessageFunctions = {
 
   cardDishOrder: (orderArray: Order[], orderNo: number) =>
     formatPayload("cardDishOrder", { orderArray, orderNo }),
+
+  generateBillNotification: (tableSectionId: string, tableNumber: number) =>
+    formatPayload("sessionClose", { tableSectionId, tableNumber }),
 };
 
 const mqttTopicFunctions = {
@@ -103,6 +107,9 @@ const mqttTopicFunctions = {
     tableSectionId: string,
     tableNumber: number,
   ) => `${restaurantId}/order/${tableSectionId}/${tableNumber}`,
+
+  broadCardForKitchenManager: (restaurantId: string) =>
+    `${restaurantId}/order/`,
 };
 
 //  type DishOrderType = CreateOrderDto & {}
@@ -225,6 +232,20 @@ const mqttMessageWithTopic = {
       ),
       mqttMessageFunctions.cardDishOrder(props.orderArray, props.orderNo),
     ),
+
+  generateBillNotification: (
+    restaurantId: string,
+    tableNumber: number,
+    tableSectionId: string,
+  ) => {
+    mqttClient.publish(
+      mqttTopicFunctions.broadCardForKitchenManager(restaurantId),
+      mqttMessageFunctions.generateBillNotification(
+        tableSectionId,
+        tableNumber,
+      ),
+    );
+  },
 };
 
 export { mqttMessageWithTopic as mqttPublish };

@@ -244,8 +244,8 @@ model SessionLogs {
   // Order_Logs          Order_Logs[] @relation(name: "mongodbId")
   Order_Logs          OrdersLogs[]
   tableNumber         Int
-  tableSection        Table        @relation(fields: [tableId], references: [id], onDelete: Cascade)
-  tableId             String       @db.ObjectId
+  tableSection        Table?       @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  tableId             String?      @db.ObjectId
   sessionCreationTime DateTime     @default(now())
   Restaurant          Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   restaurantId        String       @db.ObjectId
@@ -256,8 +256,8 @@ model OrdersLogs {
 
   // belongSession SessionLogs @relation(fields: [sessionLogsId], references: [id], name: "mongodbId")
   // sessionLogsId String      @db.ObjectId
-  SessionLogs     SessionLogs @relation(fields: [sessionLogsUuid], references: [uuid])
-  sessionLogsUuid String
+  SessionLogs     SessionLogs? @relation(fields: [sessionLogsUuid], references: [uuid])
+  sessionLogsUuid String?
 
   dish   Dish   @relation(fields: [dishId], references: [id], onDelete: Cascade)
   dishId String @db.ObjectId
