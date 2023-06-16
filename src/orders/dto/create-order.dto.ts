@@ -29,7 +29,7 @@ export class CreateOrderDto {
   @IsNotEmpty()
   tableNumber: number;
 
-  @IsUUID("4")
+  @IsString()
   @IsNotEmpty()
   sessionId: string;
 

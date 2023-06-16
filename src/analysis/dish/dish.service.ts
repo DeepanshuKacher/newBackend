@@ -14,7 +14,7 @@ export class DishService {
     if (!(userType === "Owner" || userType === "Manager"))
       throw new UnauthorizedException();
 
-    return this.prisma.ordersData.groupBy({
+    return this.prisma.dishData.groupBy({
       by: ["dateOfOrder", "dishId"],
       where: {
         restaurantId: payload.restaurantId,

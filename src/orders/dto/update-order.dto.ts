@@ -17,7 +17,7 @@ export enum Size {
 }
 
 export class UpdateOrderDto {
-  @IsUUID("4")
+  @IsString()
   @IsNotEmpty()
   orderId: string;
 

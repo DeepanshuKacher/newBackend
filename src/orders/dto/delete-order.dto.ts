@@ -11,11 +11,11 @@ import {
 } from "class-validator";
 
 export class DeleteOrderDto {
-  @IsUUID("4")
+  @IsString()
   @IsNotEmpty()
   sessionId: string;
 
-  @IsUUID("4")
+  @IsString()
   @IsNotEmpty()
   orderId: string;
 }

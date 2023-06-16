@@ -4,7 +4,6 @@ import { AppModule } from "./app.module";
 import * as cookieParser from "cookie-parser";
 import { redisClient } from "./useFullItems";
 import { constants, privateContstants } from "./useFullItems";
-import { randomUUID } from "crypto";
 
 async function bootstrap() {
   // const dotenvKeys = await redisClient.HGETALL("dotenv");

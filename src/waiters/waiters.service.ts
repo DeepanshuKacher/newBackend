@@ -285,7 +285,7 @@ export class WaitersService {
         id: payload.userId,
       },
       select: {
-        Order_Logs: true,
+        KotLog: true,
       },
     });
   }

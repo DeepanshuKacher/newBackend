@@ -57,10 +57,11 @@ model Waiter {
   verified  Boolean @default(false)
   available Boolean @default(true)
 
-  Restaurant   Restaurant   @relation(fields: [restaurantId], references: [id])
-  restaurantId String       @db.ObjectId
-  Order_Logs   OrdersLogs[]
+  Restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String     @db.ObjectId
   // AllowedOrderForLogs Order_Logs[] @relation(name: "allowedId")
+  KotLog       KotLog[]
+  KotOrder     KotOrder[]
 }
 
 model Chef {
@@ -78,9 +79,10 @@ model Chef {
   verified  Boolean @default(false)
   available Boolean @default(true)
 
-  Restaurant   Restaurant?  @relation(fields: [restaurantId], references: [id])
-  restaurantId String?      @db.ObjectId
-  Order_Logs   OrdersLogs[]
+  Restaurant   Restaurant? @relation(fields: [restaurantId], references: [id])
+  restaurantId String?     @db.ObjectId
+  KotLog       KotLog[]
+  KotOrder     KotOrder[]
 }
 
 // restaurant
@@ -103,7 +105,7 @@ model Restaurant {
 
   chefs Chef[]
 
-  orderData OrdersData[]
+  orderData DishData[]
 
   sessionLogs SessionLogs[]
 
@@ -120,6 +122,8 @@ model Restaurant {
 
   commitToken       String? //this is important
   billPrintTemplate BillPrintTemplate?
+  RestaurantRevenue RestaurantRevenue[]
+  KotOrder          KotOrder[]
 }
 
 type RestaurantSettings_Waiter {
@@ -170,8 +174,8 @@ model Dish {
   Restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   restaurantId String     @db.ObjectId
 
-  OrdersData OrdersData[]
-  Order_Logs OrdersLogs[]
+  ordersData DishData[]
+  KotOrder   KotOrder[]
 }
 
 model Table {
@@ -184,6 +188,8 @@ model Table {
   Restaurant   Restaurant    @relation(fields: [restaurantId], references: [id])
   restaurantId String        @db.ObjectId
   SessionLogs  SessionLogs[]
+  KotLog       KotLog[]
+  KotOrder     KotOrder[]
 }
 
 enum OperationType {
@@ -221,14 +227,14 @@ enum DishSize {
   small
 }
 
-model OrdersData {
+model DishData {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
   dish   Dish   @relation(fields: [dishId], references: [id], onDelete: Cascade)
   dishId String @db.ObjectId
 
   DishSize DishSize
-  cost     Int
+  cost     Float
 
   fullQuantity Int?
   halfQuantity Int?
@@ -239,43 +245,127 @@ model OrdersData {
 }
 
 model SessionLogs {
-  // id                  String       @id @default(auto()) @map("_id") @db.ObjectId
-  uuid                String       @id @map("_id")
+  id                  String     @id @default(auto()) @map("_id") @db.ObjectId
   // Order_Logs          Order_Logs[] @relation(name: "mongodbId")
-  Order_Logs          OrdersLogs[]
   tableNumber         Int
-  tableSection        Table?       @relation(fields: [tableId], references: [id], onDelete: Cascade)
-  tableId             String?      @db.ObjectId
-  sessionCreationTime DateTime     @default(now())
-  Restaurant          Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  restaurantId        String       @db.ObjectId
+  tableSection        Table?     @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  tableId             String?    @db.ObjectId
+  sessionCreationTime DateTime   @default(now())
+  Restaurant          Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId        String     @db.ObjectId
+  KotLog              KotLog[]
+  KotOrder            KotOrder[]
 }
 
-model OrdersLogs {
+enum OrderBy {
+  waiter
+  self
+}
+
+model KotOrder {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  // belongSession SessionLogs @relation(fields: [sessionLogsId], references: [id], name: "mongodbId")
-  // sessionLogsId String      @db.ObjectId
-  SessionLogs     SessionLogs? @relation(fields: [sessionLogsUuid], references: [uuid])
-  sessionLogsUuid String?
+  dateTime DateTime
 
   dish   Dish   @relation(fields: [dishId], references: [id], onDelete: Cascade)
   dishId String @db.ObjectId
 
-  user_description String?
-
-  orderedBy Waiter? @relation(fields: [waiterId], references: [id])
-  waiterId  String? @db.ObjectId
-  // allowedBy Waiter? @relation(fields: [waiterId], references: [id], name: "allowedId")
-  // allowedId String? @db.ObjectId
+  kot      KotLog @relation(fields: [kotLogId], references: [id], onDelete: Cascade)
+  kotLogId String @db.ObjectId
 
   size         DishSize
   cost         Int
   fullQuantity Int?
   halfQuantity Int?
 
-  chefAssign Chef?   @relation(fields: [chefId], references: [id])
-  chefId     String? @db.ObjectId
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId String     @db.ObjectId
 
-  orderTimeStamp DateTime @db.Timestamp
+  table   Table?  @relation(fields: [tableId], references: [id])
+  tableId String? @db.ObjectId
+
+  tableNumber Int
+
+  user_description String?
+
+  orderBy OrderBy
+
+  waiter   Waiter? @relation(fields: [waiterId], references: [id])
+  waiterId String? @db.ObjectId
+
+  chef   Chef?   @relation(fields: [chefId], references: [id])
+  chefId String? @db.ObjectId
+
+  session       SessionLogs? @relation(fields: [sessionLogsId], references: [id], onDelete: Cascade)
+  sessionLogsId String?      @db.ObjectId
+}
+
+model KotLog {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  session       SessionLogs @relation(fields: [sessionLogsId], references: [id], onDelete: Cascade)
+  sessionLogsId String      @db.ObjectId
+
+  table   Table?  @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  tableId String? @db.ObjectId
+
+  tableNumber Int
+
+  orderedBy OrderBy
+
+  waiter   Waiter? @relation(fields: [waiterId], references: [id])
+  waiterId String? @db.ObjectId
+
+  chef     Chef?      @relation(fields: [chefId], references: [id])
+  chefId   String?    @db.ObjectId
+  KotOrder KotOrder[]
+
+  createdAt DateTime
+}
+
+// model OrdersLogs {
+//   id String @id @default(auto()) @map("_id") @db.ObjectId
+
+//   SessionLogs   SessionLogs @relation(fields: [sessionLogsId], references: [id], onDelete: Cascade)
+//   sessionLogsId String      @db.ObjectId
+
+//   dish   Dish   @relation(fields: [dishId], references: [id], onDelete: Cascade)
+//   dishId String @db.ObjectId
+
+//   user_description String?
+
+//   orderedBy OrderBy
+
+//   waiterInfo Waiter? @relation(fields: [waiterId], references: [id])
+//   waiterId   String? @db.ObjectId
+//   // allowedBy Waiter? @relation(fields: [waiterId], references: [id], name: "allowedId")
+//   // allowedId String? @db.ObjectId
+
+//   size         DishSize
+//   cost         Int
+//   fullQuantity Int?
+//   halfQuantity Int?
+
+//   chefAssign Chef?   @relation(fields: [chefId], references: [id])
+//   chefId     String? @db.ObjectId
+
+//   orderTimeStamp DateTime @db.Timestamp
+// }
+
+enum ModeOfIncome {
+  online
+  cash
+}
+
+model RestaurantRevenue {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId String     @db.ObjectId
+
+  revenueGenerated Float
+
+  date DateTime @db.Date
+
+  modeOfIncome ModeOfIncome
 }

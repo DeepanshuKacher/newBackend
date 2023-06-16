@@ -61,6 +61,9 @@ export const redisConstants = {
     `${restaurantId}:${dayTracker("Yesterday")}:KotContainer`,
 
   kot_key: (kotUUID: string) => `${kotUUID}:kot`,
+
+  restaurantOrderIndex: "restaurantOrder",
+  restaurantCartIndex: "restaurantCart",
 };
 
 export const redisKeyExpiry = {

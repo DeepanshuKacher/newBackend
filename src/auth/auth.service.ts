@@ -22,9 +22,7 @@ import {
 } from "./dto";
 import { redisClient, constants, redisConstants } from "../useFullItems";
 import type { Response, Request } from "express";
-import { ConfigService } from "@nestjs/config";
 import { MailServiceService } from "src/mail-service/mail-service.service";
-import { randomUUID } from "crypto";
 import { ResetPasswordDto, ResetPasswordFinal } from "./dto/resetPassword.dto";
 
 @Injectable()

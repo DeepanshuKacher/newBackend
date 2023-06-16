@@ -5,12 +5,10 @@ import {
   IsMongoId,
   IsNotEmpty,
   IsString,
-  IsUUID,
-  isUUID,
 } from "class-validator";
 
 export class CartToOrderDTO {
-  @IsUUID(4)
+  @IsString()
   @IsNotEmpty()
   tableSessionId: string;
 

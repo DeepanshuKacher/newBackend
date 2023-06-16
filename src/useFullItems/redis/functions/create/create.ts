@@ -1,9 +1,5 @@
 import { redisClient } from "../../redisClient";
-import {
-  orderConstants,
-  redisConstants,
-  redisKeyExpiry,
-} from "../../constants";
+import { redisConstants, redisKeyExpiry } from "../../constants";
 import { kot, restaurantKotContainerPush } from "./functions";
 
 enum Size {
@@ -25,6 +21,39 @@ export type Order = {
   chefAssign?: string;
   completed?: string;
   createdAt: string;
+};
+
+export interface KotCreation {
+  kotId: string;
+  tableSectionId: string;
+  tableNumber: number;
+  restaurantId: string;
+  createdAt: number;
+  orderedBy: string;
+  completed?: number;
+  // cart: number;
+  sessionId: string;
+  chefAssign?: string;
+  orders: NewOrderType[];
+}
+
+export type NewOrderType = {
+  size: OrderProps["size"];
+  fullQuantity: number;
+  halfQuantity: number;
+  user_description: string;
+  // cart: number;
+  sessionId: string;
+  createdAt: number;
+  orderedBy: string;
+  chefAssign: string;
+  completed: number;
+  tableSectionId: string;
+  tableNumber: number;
+  restaurantId: string;
+  kotId: string;
+  dishId: string;
+  orderId: string;
 };
 
 export interface OrderProps
@@ -62,29 +91,94 @@ export const redis_create_Functions = {
         return response;
       }),
 
-  createOrder: (props: OrderProps) =>
-    redisClient.HSET(redisConstants.orderKey(props.orderId), [
-      orderConstants.dishId,
-      props.dishId,
-      orderConstants.orderId,
-      props.orderId,
-      orderConstants.tableNumber,
-      props.tableNumber,
-      orderConstants.tableSectionId,
-      props.tableSectionId,
-      orderConstants.user_description,
-      props.user_description,
-      orderConstants.orderedBy,
-      props.orderedBy,
-      orderConstants.size,
+  createOrder: (props: KotCreation) => {
+    return redisClient.json.set(`kot:${props.kotId}`, "$", {
+      kotId: props.kotId,
+      tableSectionId: props.tableSectionId,
+      tableNumber: props.tableNumber,
+      restaurantId: props.restaurantId,
+      createdAt: props.createdAt,
+      orderedBy: props.orderedBy,
+      completed: 0,
+      // cart: props.cart,
+      sessionId: props.sessionId,
+      chefAssign: "",
+      orders: props.orders,
+    });
+  },
+
+  createCartOrder: (
+    props: Omit<
+      NewOrderType,
+      "createdAt" | "kotId" | "completed" | "chefAssign"
+    >,
+  ) =>
+    redisClient.HSET("cart:" + props.orderId, [
+      "size",
       props.size,
-      orderConstants.fullQuantity,
-      props.fullQuantity || 0,
-      orderConstants.halfQuantity,
-      props.halfQuantity || 0,
-      orderConstants.createdAt,
-      props.createdAt,
+      "fullQuantity",
+      props.fullQuantity,
+      "halfQuantity",
+      props.halfQuantity,
+      "user_description",
+      props.user_description,
+      // "cart",
+      // props.cart,
+      "sessionId",
+      props.sessionId,
+      "orderedBy",
+      props.orderedBy,
+      "tableSectionId",
+      props.tableSectionId,
+      "tableNumber",
+      props.tableNumber,
+      "restaurantId",
+      props.restaurantId,
+      "dishId",
+      props.dishId,
+      "orderId",
+      props.orderId,
     ]),
+
+  // createOrder: (props: NewOrderType) => {
+  //   const orderId = constants.workerTokenGenerator(16);
+  //   return redisClient.HSET(`order:${orderId}`, [
+  //     "size",
+  //     props.size,
+  //     "fullQuantity",
+  //     props.fullQuantity,
+  //     "halfQuantity",
+  //     props.halfQuantity,
+  //     "user_description",
+  //     props.user_description,
+  //     "cart",
+  //     props.cart,
+  //     "sessionId",
+  //     props.sessionId,
+  //     "createdAt",
+  //     props.createdAt,
+  //     "orderedBy",
+  //     props.orderedBy,
+  //     "chefAssign",
+  //     props.chefAssign,
+  //     "completed",
+  //     props.completed,
+  //     "tableSectionId",
+  //     props.tableSectionId,
+  //     "tableNumber",
+  //     props.tableNumber,
+  //     "restaurantId",
+  //     props.restaurantId,
+  //     "kotNo",
+  //     props.kotNo,
+  //     "dishId",
+  //     props.dishId,
+  //     "orderNumber",
+  //     props.orderNumber,
+  //     "orderId",
+  //     orderId,
+  //   ]);
+  // },
   // .then(() =>
   //   redisClient.EXPIRE(
   //     redisConstants.orderKey(props.orderId),

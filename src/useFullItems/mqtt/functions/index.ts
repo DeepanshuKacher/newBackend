@@ -1,6 +1,7 @@
 import { CreateOrderDto, Size } from "src/orders/dto/create-order.dto";
 import { mqttClient } from "../client";
 import { Order } from "src/useFullItems/redis";
+import { RetreveKotJson } from "src/Interfaces";
 
 const orderStatusUpdation = {
   Accept: "Accept",
@@ -31,46 +32,7 @@ const mqttMessageFunctions = {
       status,
     }),
 
-  dishOrder: ({
-    dishId,
-    tableSectionId,
-    user_description,
-    orderedBy,
-    orderId,
-    tableNumber,
-    fullQuantity,
-    halfQuantity,
-    size,
-    createdAt,
-    orderNo,
-  }: {
-    dishId: string;
-    tableSectionId: string;
-    user_description?: string;
-    orderedBy: string;
-    orderId: string;
-    tableNumber: number;
-    size: Size;
-    halfQuantity: number;
-    fullQuantity: number;
-    createdAt: string;
-    orderNo: number;
-  }) =>
-    formatPayload("dishOrder", {
-      order: {
-        dishId,
-        tableSectionId,
-        user_description,
-        orderedBy,
-        orderId,
-        tableNumber,
-        fullQuantity,
-        halfQuantity,
-        size,
-        createdAt,
-      },
-      orderNo,
-    }),
+  dishOrder: (kot: RetreveKotJson) => formatPayload("dishOrder", kot),
 
   acceptOrder: (orderId: string, chefId: string) =>
     formatPayload("updateOrder", {
@@ -133,45 +95,14 @@ const mqttMessageWithTopic = {
       },
     ),
 
-  dishOrder: ({
-    dishId,
-    tableSectionId,
-    tableNumber,
-    size,
-    fullQuantity,
-    halfQuantity,
-    restaurantId,
-    user_description,
-    orderId,
-    orderedBy,
-    createdAt,
-    orderNo,
-  }: CreateOrderDto & {
-    restaurantId: string;
-    orderedBy: string;
-    orderId: string;
-    createdAt: string;
-    orderNo: number;
-  }) =>
+  dishOrder: (kot: RetreveKotJson) =>
     mqttClient.publish(
       mqttTopicFunctions.orderBroadCast(
-        restaurantId,
-        tableSectionId,
-        tableNumber,
+        kot.value.restaurantId,
+        kot.value.tableSectionId,
+        kot.value.tableNumber,
       ),
-      mqttMessageFunctions.dishOrder({
-        dishId,
-        tableSectionId,
-        user_description,
-        orderedBy,
-        orderId,
-        tableNumber,
-        fullQuantity,
-        halfQuantity,
-        size,
-        createdAt,
-        orderNo,
-      }),
+      mqttMessageFunctions.dishOrder(kot),
     ),
 
   acceptOrder: (

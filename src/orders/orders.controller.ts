@@ -37,7 +37,7 @@ export class OrdersController {
     return this.ordersService.create(createOrderDto, payload);
   }
 
-  @Patch("/accept")
+  @Patch("accept")
   acceptOrder(
     @Body() dto: UpdateOrderStatusDto,
     @GetJwtPayload() payload: JwtPayload_restaurantId,
@@ -45,7 +45,7 @@ export class OrdersController {
     return this.ordersService.acceptOrder(payload, dto);
   }
 
-  @Patch("/reject")
+  @Patch("reject")
   rejectOrder(
     @Body() dto: UpdateOrderStatusDto,
     @GetJwtPayload() payload: JwtPayload_restaurantId,
@@ -57,7 +57,7 @@ export class OrdersController {
     return this.ordersService.updateOrder(dto);
   }
 
-  @Patch("/complete")
+  @Patch("complete")
   completeOrder(
     @Body() dto: UpdateOrderStatusDto,
     @GetJwtPayload() payload: JwtPayload_restaurantId,

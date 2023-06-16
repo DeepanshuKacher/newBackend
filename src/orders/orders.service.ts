@@ -4,9 +4,9 @@ import {
   Injectable,
   InternalServerErrorException,
 } from "@nestjs/common";
-import { randomUUID } from "crypto";
-import { JwtPayload_restaurantId } from "src/Interfaces";
+import { JwtPayload_restaurantId, RetreveKotJson } from "src/Interfaces";
 import {
+  KotCreation,
   constants,
   mqttPublish,
   orderConstants,
@@ -55,70 +55,107 @@ export class OrdersService {
     if (sessionIdFromRedis !== redisConstants.sessionKey(sessionId))
       throw new ConflictException();
 
-    const orderId = randomUUID(),
-      currentDate = DateTime.now().setZone(constants.IndiaTimeZone).toISO();
+    const kotId = constants.workerTokenGenerator(16);
+    const createdAt = Date.now();
 
-    const createOrderPromis = redis_create_Functions.createOrder({
-      dishId,
-      orderedBy: payload.userId,
-      orderId,
-      size,
+    await redis_create_Functions.createOrder({
+      // cart: 0,
+      createdAt,
+      kotId,
+      orderedBy: payload?.userId || "self",
+      restaurantId: payload.restaurantId,
+      sessionId,
       tableNumber,
       tableSectionId,
-      fullQuantity,
-      halfQuantity,
-      user_description,
-      createdAt: currentDate,
+      orders: [
+        {
+          // cart: 0,
+          completed: 0,
+          createdAt,
+          dishId,
+          fullQuantity: fullQuantity || 0,
+          halfQuantity: halfQuantity || 0,
+          kotId,
+          orderedBy: payload?.userId || "self",
+          orderId: constants.workerTokenGenerator(16),
+          restaurantId: payload.restaurantId,
+          size,
+          tableNumber,
+          tableSectionId,
+          user_description,
+          sessionId,
+          chefAssign: "",
+        },
+      ],
     });
 
-    const pushOrderToTableSessionPromis = redis_create_Functions.tableSession(
-      sessionId,
-      orderId,
-    );
+    // const pushOrderToTableSessionPromis = redis_create_Functions.tableSession(
+    //   sessionId,
+    //   orderId,
+    // );
 
-    const pushOrderToRestaurantContainerPromis =
-      redis_create_Functions.restaurantRealtimeOrdersContainer(
-        payload.restaurantId,
-        orderId,
-      );
+    // const pushOrderToRestaurantContainerPromis =
+    //   redis_create_Functions.restaurantRealtimeOrdersContainer(
+    //     payload.restaurantId,
+    //     orderId,
+    //   );
 
-    const createKotPromise = redis_create_Functions.kot(orderId, [
-      redisConstants.orderKey(orderId),
-    ]);
+    // const createKotPromise = redis_create_Functions.kot(orderId, [
+    //   redisConstants.orderKey(orderId),
+    // ]);
 
-    const pushKotToRestaurantContainerPromise =
-      redis_create_Functions.restaurantKotContainerPush(
-        payload.restaurantId,
-        redisConstants.kot_key(orderId),
-      );
+    // const pushKotToRestaurantContainerPromise =
+    //   redis_create_Functions.restaurantKotContainerPush(
+    //     payload.restaurantId,
+    //     redisConstants.kot_key(orderId),
+    //   );
 
     try {
-      const [
-        createOrder,
-        pushOrderToTableSession,
-        pushOrderToRestaurantContainer,
-      ] = await Promise.all([
-        createOrderPromis,
-        pushOrderToTableSessionPromis,
-        pushOrderToRestaurantContainerPromis,
-        createKotPromise,
-        pushKotToRestaurantContainerPromise,
-      ]);
+      // const [
+      //   createOrder,
+      //   pushOrderToTableSession,
+      //   pushOrderToRestaurantContainer,
+      // ] = await Promise.all([
+      //   createOrderPromis,
+      //   pushOrderToTableSessionPromis,
+      //   pushOrderToRestaurantContainerPromis,
+      //   createKotPromise,
+      //   pushKotToRestaurantContainerPromise,
+      // ]);
 
       mqttPublish.dishOrder({
-        dishId,
-        orderedBy: payload.userId,
-        orderId,
-        restaurantId: payload.restaurantId,
-        sessionId,
-        size,
-        tableNumber,
-        tableSectionId,
-        fullQuantity,
-        halfQuantity,
-        user_description,
-        createdAt: currentDate,
-        orderNo: pushOrderToRestaurantContainer,
+        id: `kot:${kotId}`,
+        value: {
+          chefAssign: "",
+          completed: 0,
+          createdAt,
+          kotId,
+          orderedBy: payload?.userId || "self",
+          restaurantId: payload.restaurantId,
+          sessionId,
+          tableNumber,
+          tableSectionId,
+          orders: [
+            {
+              // cart: 0,
+              completed: 0,
+              createdAt,
+              dishId,
+              fullQuantity: fullQuantity || 0,
+              halfQuantity: halfQuantity || 0,
+              kotId,
+              orderedBy: payload?.userId || "self",
+              orderId: constants.workerTokenGenerator(16),
+              restaurantId: payload.restaurantId,
+              size,
+              tableNumber,
+              tableSectionId,
+              user_description,
+              sessionId,
+              chefAssign: "",
+            },
+          ],
+        },
       });
 
       return constants.OK;
@@ -131,21 +168,27 @@ export class OrdersService {
   }
 
   async findAll(payload: JwtPayload_restaurantId) {
-    const restaurantOrderPromisYesterday = redisClient.LRANGE(
-      redisConstants.restaurantRealtimeOrdersContainer_Yesterday_Key(
-        payload.restaurantId,
-      ),
-      0,
-      -1,
+    const orders = await redisClient.ft.search(
+      redisConstants.restaurantOrderIndex,
+      `@restaurantId:{${payload.restaurantId}}`,
     );
 
-    const restaurantOrderPromisToday = redisClient.LRANGE(
-      redisConstants.restaurantRealtimeOrdersContainer_Today_Key(
-        payload.restaurantId,
-      ),
-      0,
-      -1,
-    );
+    return orders.documents;
+    // const restaurantOrderPromisYesterday = redisClient.LRANGE(
+    //   redisConstants.restaurantRealtimeOrdersContainer_Yesterday_Key(
+    //     payload.restaurantId,
+    //   ),
+    //   0,
+    //   -1,
+    // );
+
+    // const restaurantOrderPromisToday = redisClient.LRANGE(
+    //   redisConstants.restaurantRealtimeOrdersContainer_Today_Key(
+    //     payload.restaurantId,
+    //   ),
+    //   0,
+    //   -1,
+    // );
 
     // console.log({
     //   key: redisConstants.restaurantRealtimeOrdersContainer_Today_Key(
@@ -153,39 +196,49 @@ export class OrdersService {
     //   ),
     // });
 
-    const [restaurantOrderDataToday, restaurantOrderDataYesterday] =
-      await Promise.all([
-        restaurantOrderPromisToday,
-        restaurantOrderPromisYesterday,
-      ]);
+    // const [restaurantOrderDataToday, restaurantOrderDataYesterday] =
+    //   await Promise.all([
+    //     restaurantOrderPromisToday,
+    //     restaurantOrderPromisYesterday,
+    //   ]);
 
-    const todaysOrdersPromis = [];
-    const yesterDaysOrdersPromis = [];
+    // const todaysOrdersPromis = [];
+    // const yesterDaysOrdersPromis = [];
 
-    for (let x of restaurantOrderDataToday) {
-      todaysOrdersPromis.push(redisClient.HGETALL(x));
-    }
-    for (let x of restaurantOrderDataYesterday) {
-      yesterDaysOrdersPromis.push(redisClient.HGETALL(x));
-    }
+    // for (let x of restaurantOrderDataToday) {
+    //   todaysOrdersPromis.push(redisClient.HGETALL(x));
+    // }
+    // for (let x of restaurantOrderDataYesterday) {
+    //   yesterDaysOrdersPromis.push(redisClient.HGETALL(x));
+    // }
 
-    const todaysOrders = await Promise.all(todaysOrdersPromis);
-    const yesterDaysOrders = await Promise.all(yesterDaysOrdersPromis);
+    // const todaysOrders = await Promise.all(todaysOrdersPromis);
+    // const yesterDaysOrders = await Promise.all(yesterDaysOrdersPromis);
 
-    return yesterDaysOrders.concat(todaysOrders);
+    // return yesterDaysOrders.concat(todaysOrders);
   }
 
   async acceptOrder(
     payload: JwtPayload_restaurantId,
     dto: UpdateOrderStatusDto,
   ) {
-    const setChef = await redisClient.HSETNX(
-      redisConstants.orderKey(dto.orderId),
-      orderConstants.chefAssign,
-      payload.userId,
-    );
+    const { orderId, tableNumber, tableSectionId } = dto;
 
-    if (!setChef) throw new ConflictException();
+    const chefAssign = await redisClient.json.get(orderId, {
+      path: ["chefAssign"],
+    });
+
+    if (chefAssign) throw new ConflictException("Order already taken");
+
+    await redisClient.json.set(orderId, "$.chefAssign", payload.userId);
+
+    // const temp: any = await redisClient.json.get(orderId);
+
+    // const kotDetail: RetreveKotJson = temp;
+
+    // console.log(setChef);
+
+    // if (setChef.chefAssign) throw new ConflictException();
 
     mqttPublish.acceptOrder(
       payload.restaurantId,
@@ -202,17 +255,15 @@ export class OrdersService {
     payload: JwtPayload_restaurantId,
     dto: UpdateOrderStatusDto,
   ) {
-    const chefAssign = await redisClient.HGET(
-      redisConstants.orderKey(dto.orderId),
-      orderConstants.chefAssign,
-    );
+    const { orderId, tableNumber, tableSectionId } = dto;
 
-    if (chefAssign !== payload.userId) throw new ForbiddenException();
+    const chefAssign = await redisClient.json.get(orderId, {
+      path: ["chefAssign"],
+    });
 
-    await redisClient.HDEL(
-      redisConstants.orderKey(dto.orderId),
-      orderConstants.chefAssign,
-    );
+    if (chefAssign !== payload.userId) throw new ConflictException();
+
+    await redisClient.json.set(orderId, "$.chefAssign", "");
 
     mqttPublish.rejectOrder(
       payload.restaurantId,
@@ -220,25 +271,25 @@ export class OrdersService {
       dto.tableSectionId,
       dto.orderId,
     );
+
+    return constants.OK;
   }
   async completeOrder(
     payload: JwtPayload_restaurantId,
     dto: UpdateOrderStatusDto,
   ) {
-    const chefAssign = await redisClient.HGET(
-      redisConstants.orderKey(dto.orderId),
-      orderConstants.chefAssign,
-    );
+    const { orderId, tableNumber, tableSectionId } = dto;
 
-    if (chefAssign !== payload.userId) throw new ForbiddenException();
+    const kotInfoTemp: any = await redisClient.json.get(orderId, {
+      path: ["chefAssign", "completed"],
+    });
 
-    const value = await redisClient.HSETNX(
-      redisConstants.orderKey(dto.orderId),
-      orderConstants.completed,
-      orderConstants.completed,
-    );
+    const kotInfo: { completed: number; chefAssign: string } = kotInfoTemp;
 
-    if (!value) throw new ConflictException("Already Completed");
+    if (kotInfo.chefAssign !== payload.userId) throw new ForbiddenException();
+    if (kotInfo.completed) throw new ConflictException();
+
+    await redisClient.json.set(orderId, "$.completed", 1);
 
     mqttPublish.completeOrder(
       payload.restaurantId,
@@ -246,43 +297,45 @@ export class OrdersService {
       dto.tableSectionId,
       dto.orderId,
     );
+
+    return constants.OK;
   }
 
   getOrder_logs(payload: JwtPayload_restaurantId) {
     switch (payload.userType) {
       case "Waiter":
-        return this.prisma.ordersLogs.findMany({
+        return this.prisma.kotLog.findMany({
           where: {
             waiterId: payload.userId,
           },
           include: {
-            SessionLogs: {
+            session: {
               select: {
-                tableNumber: true,
                 tableId: true,
+                tableNumber: true,
               },
             },
           },
           orderBy: {
-            orderTimeStamp: "desc",
+            createdAt: "asc",
           },
         });
 
       case "Chef":
-        return this.prisma.ordersLogs.findMany({
+        return this.prisma.kotLog.findMany({
           where: {
             chefId: payload.userId,
           },
           include: {
-            SessionLogs: {
+            session: {
               select: {
-                tableNumber: true,
                 tableId: true,
+                tableNumber: true,
               },
             },
           },
           orderBy: {
-            orderTimeStamp: "desc",
+            createdAt: "asc",
           },
         });
     }

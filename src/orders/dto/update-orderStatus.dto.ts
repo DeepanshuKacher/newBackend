@@ -15,7 +15,7 @@ import {
 // }
 
 export class UpdateOrderStatusDto {
-  @IsUUID("4")
+  @IsString()
   @IsNotEmpty()
   orderId: string;
 
