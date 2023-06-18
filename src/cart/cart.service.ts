@@ -113,6 +113,10 @@ export class CartService {
             BY: "createdAt",
             DIRECTION: "ASC",
           },
+          LIMIT: {
+            from: 0,
+            size: 1000,
+          },
         },
       )
     )?.documents;

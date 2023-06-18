@@ -118,6 +118,16 @@ export class SessionsService {
       const jsonOrders = await redisClient.ft.search(
         redisConstants.restaurantOrderIndex,
         `@sessionId:{${sessionUUID}}`,
+        {
+          LIMIT: {
+            from: 0,
+            size: 10000,
+          },
+          SORTBY: {
+            BY: "createdAt",
+            DIRECTION: "ASC",
+          },
+        },
       );
 
       // console.log(jsonOrders.documents[0]);
@@ -162,6 +172,12 @@ export class SessionsService {
       await redisClient.ft.search(
         redisConstants.restaurantOrderIndex,
         `@sessionId:{${sessionId}}`,
+        {
+          LIMIT: {
+            from: 0,
+            size: 10000,
+          },
+        },
       )
     ).documents;
 

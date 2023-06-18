@@ -171,7 +171,16 @@ export class OrdersService {
     const orders = await redisClient.ft.search(
       redisConstants.restaurantOrderIndex,
       `@restaurantId:{${payload.restaurantId}}`,
+      {
+        LIMIT: {
+          from: 0,
+          size: 10000,
+        },
+      },
     );
+
+    // console.log({ orders: orders.total });
+    // console.log({ orders: orders.documents });
 
     return orders.documents;
     // const restaurantOrderPromisYesterday = redisClient.LRANGE(
