@@ -139,7 +139,6 @@ export const redis_create_Functions = {
       "orderId",
       props.orderId,
     ]),
-
   // createOrder: (props: NewOrderType) => {
   //   const orderId = constants.workerTokenGenerator(16);
   //   return redisClient.HSET(`order:${orderId}`, [

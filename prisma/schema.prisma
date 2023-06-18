@@ -367,5 +367,5 @@ model RestaurantRevenue {
 
   date DateTime @db.Date
 
-  modeOfIncome ModeOfIncome
+  modeOfIncome ModeOfIncome?
 }

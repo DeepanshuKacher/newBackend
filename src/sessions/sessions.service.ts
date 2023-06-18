@@ -162,12 +162,6 @@ export class SessionsService {
     if (tableSessionIdFromTableInfo !== redisConstants.sessionKey(sessionId))
       throw new ConflictException("Invalid Session");
 
-    // save logs to prisma
-
-    // detach session from table
-    // mqtt publish
-    // set expiry to kot
-
     const jsonOrders: any = (
       await redisClient.ft.search(
         redisConstants.restaurantOrderIndex,
@@ -183,8 +177,150 @@ export class SessionsService {
 
     const jsonOrdersType: RetreveKotJson[] = jsonOrders;
 
-    console.log(jsonOrdersType);
-    return "ok";
+    const disheshInfo = (
+      await this.prisma.restaurant.findUnique({
+        where: {
+          id: payload.restaurantId,
+        },
+        select: {
+          dishesh: true,
+        },
+      })
+    ).dishesh;
+
+    const getOrderPrice_impure = (order: NewOrderType) => {
+      const dish = disheshInfo.find((dish) => dish.id === order.dishId);
+
+      const fullQuantity = order.fullQuantity,
+        halfQuantity = order.halfQuantity,
+        size = order?.size;
+
+      let returnPrice = 0;
+
+      returnPrice = (fullQuantity || 0) * (dish?.price?.[size]?.full || 0);
+      returnPrice += (halfQuantity || 0) * (dish?.price?.[size]?.half || 0);
+
+      return returnPrice;
+    };
+
+    const promiseContainer = [];
+
+    for (const kot of jsonOrdersType) {
+      const { id, value } = kot;
+
+      const kotLogPromise = this.prisma.kotLog.create({
+        data: {
+          createdAt: new Date(value.createdAt),
+          orderedBy: value.orderedBy === "self" ? "self" : "waiter",
+          tableNumber: value.tableNumber,
+          chefId: value?.chefAssign || null,
+          sessionLogsId: value.sessionId,
+          waiterId: value?.orderedBy || null,
+          tableId: value.tableSectionId,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const expireKotPromise = redisClient.expire(id, 24 * 60 * 60);
+
+      const [kotLog, expireKot] = await Promise.all([
+        kotLogPromise,
+        expireKotPromise,
+      ]);
+
+      for (const order of kot.value.orders) {
+        const createKotOrderPromise = this.prisma.kotOrder.create({
+          data: {
+            dateTime: new Date(order.createdAt),
+            dishId: order.dishId,
+            kotLogId: kotLog.id,
+            size: order.size,
+            cost: getOrderPrice_impure(order),
+            fullQuantity: order?.fullQuantity || null,
+            halfQuantity: order?.halfQuantity || null,
+            restaurantId: order.restaurantId,
+            tableId: order.tableSectionId,
+            tableNumber: order.tableNumber,
+            user_description: order.user_description,
+            orderBy: value.orderedBy === "self" ? "self" : "waiter",
+            waiterId: value?.orderedBy || null,
+            chefId: value?.chefAssign || null,
+            sessionLogsId: value.sessionId,
+          },
+        });
+        const createDishDataPromise = this.prisma.dishData.create({
+          data: {
+            dishId: order.dishId,
+            DishSize: order.size,
+            cost: getOrderPrice_impure(order),
+            fullQuantity: order?.fullQuantity || null,
+            halfQuantity: order?.halfQuantity || null,
+            dateOfOrder: new Date(order.createdAt),
+            restaurantId: order.restaurantId,
+          },
+        });
+
+        const restaurantRevenueCreatePromise =
+          this.prisma.restaurantRevenue.create({
+            data: {
+              restaurantId: payload.restaurantId,
+              revenueGenerated: getOrderPrice_impure(order),
+              date: DateTime.now()
+                .setZone(constants.IndiaTimeZone)
+                .startOf("day")
+                .toISO(),
+            },
+          });
+
+        promiseContainer.concat([
+          createDishDataPromise,
+          createKotOrderPromise,
+          restaurantRevenueCreatePromise,
+        ]);
+      }
+    }
+
+    await Promise.all(promiseContainer);
+
+    // delete cart
+    const cartData = (
+      await redisClient.ft.search(
+        redisConstants.restaurantCartIndex,
+        `@sessionId:{${sessionId}}`,
+        {
+          LIMIT: {
+            from: 0,
+            size: 1000,
+          },
+        },
+      )
+    ).documents;
+
+    for (const x of cartData) {
+      await redisClient.DEL(x.id);
+    }
+
+    // detach session from table
+    const detachSessionFromTable = await redisClient.HDEL(
+      redisConstants.tablesStatusKey(payload.restaurantId),
+      redisConstants.tableSessionKeyForTablesStatus(
+        tableSectionId,
+        tableNumber,
+      ),
+    );
+
+    // mqtt publish
+    mqttPublish.sessionStartConfirmation(
+      payload.restaurantId,
+      createSessionDto.tableSectionId,
+      createSessionDto.tableNumber,
+      null,
+    );
+    // set expiry to kot
+
+    return constants.OK;
 
     // const orderObjects: NewOrderType[] = [];
 
@@ -264,14 +400,6 @@ export class SessionsService {
     //         .toISO(),
     //     })),
     //   });
-
-    const detachSessionFromTable = await redisClient.HDEL(
-      redisConstants.tablesStatusKey(payload.restaurantId),
-      redisConstants.tableSessionKeyForTablesStatus(
-        tableSectionId,
-        tableNumber,
-      ),
-    );
 
     // const deleteSession = redisClient.DEL(redisConstants.sessionKey(sessionId));
 
