@@ -230,6 +230,18 @@ export class CartService {
       const createdAt = Date.now();
       const kotId = constants.workerTokenGenerator(16);
 
+      const kotNoPromise = redisClient.INCR(`${payload.restaurantId}:kotCount`);
+      const dateTime = DateTime.now().endOf("day").toUnixInteger();
+
+      const [kotNo, setKotCountExpire] = await Promise.all([
+        kotNoPromise,
+        redisClient.EXPIREAT(
+          `${payload.restaurantId}:kotCount`,
+          dateTime,
+          "NX",
+        ),
+      ]);
+
       const createOrderFromCartPromise = redis_create_Functions.createOrder({
         createdAt,
         kotId,
@@ -239,6 +251,8 @@ export class CartService {
         tableNumber,
         tableSectionId,
         chefAssign: "",
+        kotNo,
+        printCount: 0,
         orders: cartContainer.map((cartItem) => ({
           ...cartItem,
           createdAt,
@@ -277,6 +291,8 @@ export class CartService {
           sessionId: tableSessionId,
           tableNumber,
           tableSectionId,
+          kotNo,
+          printCount: 0,
           orders: cartContainer.map((cartItem) => ({
             ...cartItem,
             createdAt,

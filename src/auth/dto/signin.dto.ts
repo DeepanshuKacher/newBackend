@@ -6,6 +6,7 @@ export enum UserType {
   Waiter = "Waiter",
   Chef = "Chef",
   FOODIE = "FOODIE",
+  MACHINE = "MACHINE",
 }
 
 export class SignInDto {

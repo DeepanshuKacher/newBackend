@@ -1,23 +1,17 @@
 import {
   ForbiddenException,
-  HttpStatus,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateRestaurantDto } from "./dto";
-import * as argon from "argon2";
-import type { Request, Response } from "express";
-import {
-  constants,
-  redisClient,
-  cacheFunction,
-  privateContstants,
-} from "../useFullItems";
+import type { Request } from "express";
+import { constants, redisClient, cacheFunction } from "../useFullItems";
 import { AuthService } from "src/auth/auth.service";
 import { JwtPayload_restaurantId } from "src/Interfaces";
-import { Prisma } from "@prisma/client";
+import { UserType } from "src/auth/dto";
 
 @Injectable()
 export class RestaurantsService {
@@ -28,6 +22,9 @@ export class RestaurantsService {
 
   async create(request: Request, dto: CreateRestaurantDto) {
     const userId = request.signedCookies[constants.sessionId];
+    const userType: UserType = request.signedCookies[constants.userType];
+
+    if (userType !== "Owner") throw new UnauthorizedException();
 
     try {
       await this.prisma.restaurant.create({
@@ -73,15 +70,27 @@ export class RestaurantsService {
   async findAllRestaurants(request: Request) {
     const userId = request.signedCookies?.[constants.sessionId];
 
+    const userType: UserType = request.signedCookies?.[constants.userType];
+
     if (!userId) throw new ForbiddenException();
 
     try {
-      return this.prisma.owner.findUnique({
-        where: { id: userId },
-        select: {
-          restaurants: { select: { city: true, name: true, id: true } },
-        },
-      });
+      if (userType === "Owner")
+        return this.prisma.owner.findUnique({
+          where: { id: userId },
+          select: {
+            restaurants: { select: { city: true, name: true, id: true } },
+          },
+        });
+      else if (userType === "Manager")
+        return this.prisma.manager.findUnique({
+          where: { id: userId },
+          select: {
+            restaurant: {
+              select: { city: true, name: true, id: true },
+            },
+          },
+        });
     } catch (error) {
       console.log(error);
       throw new InternalServerErrorException(constants.InternalError, {
@@ -121,7 +130,7 @@ export class RestaurantsService {
         },
       });
 
-      if (payload?.userType === "Owner" || payload?.userId === "Manager") {
+      if (payload?.userType === "Owner" || payload?.userType === "Manager") {
         const restaurantPrivateInfo = this.prisma.restaurant.findUnique({
           where: { id: payload.restaurantId },
           select: {
@@ -149,20 +158,24 @@ export class RestaurantsService {
           },
         });
 
-        let selfInfoPromis: Prisma.Prisma__OwnerClient<
-          {
-            id: string;
-          },
-          never
-        >;
+        let selfInfoPromis;
 
         /* make this for  manager also
 
         if(payload.userType === 'Manager'){....}
         */
 
-        if (payload.userType === "Owner") {
+        if (payload?.userType === "Owner") {
           selfInfoPromis = this.prisma.owner.findUnique({
+            where: {
+              id: payload.userId,
+            },
+            select: {
+              id: true,
+            },
+          });
+        } else if (payload?.userType === "Manager") {
+          selfInfoPromis = this.prisma.manager.findUnique({
             where: {
               id: payload.userId,
             },

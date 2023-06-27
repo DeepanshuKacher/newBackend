@@ -38,7 +38,7 @@ model Manager {
   createdAt DateTime @default(now())
   updatedAd DateTime @updatedAt
 
-  Restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   restaurantId String     @db.ObjectId
 }
 
@@ -111,6 +111,8 @@ model Restaurant {
 
   owner   Owner  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId String @db.ObjectId
+
+  // startingTime DateTime? @db.Timestamp
 
   createdAt DateTime @default(now())
   updatedAd DateTime @updatedAt
@@ -322,35 +324,6 @@ model KotLog {
 
   createdAt DateTime
 }
-
-// model OrdersLogs {
-//   id String @id @default(auto()) @map("_id") @db.ObjectId
-
-//   SessionLogs   SessionLogs @relation(fields: [sessionLogsId], references: [id], onDelete: Cascade)
-//   sessionLogsId String      @db.ObjectId
-
-//   dish   Dish   @relation(fields: [dishId], references: [id], onDelete: Cascade)
-//   dishId String @db.ObjectId
-
-//   user_description String?
-
-//   orderedBy OrderBy
-
-//   waiterInfo Waiter? @relation(fields: [waiterId], references: [id])
-//   waiterId   String? @db.ObjectId
-//   // allowedBy Waiter? @relation(fields: [waiterId], references: [id], name: "allowedId")
-//   // allowedId String? @db.ObjectId
-
-//   size         DishSize
-//   cost         Int
-//   fullQuantity Int?
-//   halfQuantity Int?
-
-//   chefAssign Chef?   @relation(fields: [chefId], references: [id])
-//   chefId     String? @db.ObjectId
-
-//   orderTimeStamp DateTime @db.Timestamp
-// }
 
 enum ModeOfIncome {
   online

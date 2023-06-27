@@ -33,5 +33,7 @@ export interface RetreveKotJson {
     sessionId: string;
     chefAssign: string;
     orders: RetreveOrderFromJson[];
+    kotNo: number;
+    printCount: number;
   };
 }

@@ -16,6 +16,12 @@ export enum Size {
   Small = "small",
 }
 
+export class KotId {
+  @IsNotEmpty()
+  @IsString()
+  kotId: string;
+}
+
 export class CreateOrderDto {
   @IsMongoId()
   @IsNotEmpty()

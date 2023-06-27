@@ -16,7 +16,7 @@ import {
   redis_create_Functions,
   redis_update_functions,
 } from "src/useFullItems";
-import { CreateOrderDto } from "./dto/create-order.dto";
+import { CreateOrderDto, KotId } from "./dto/create-order.dto";
 import { UpdateOrderStatusDto } from "./dto/update-orderStatus.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { DateTime } from "luxon";
@@ -58,6 +58,14 @@ export class OrdersService {
     const kotId = constants.workerTokenGenerator(16);
     const createdAt = Date.now();
 
+    const kotNoPromise = redisClient.INCR(`${payload.restaurantId}:kotCount`);
+    const dateTime = DateTime.now().endOf("day").toUnixInteger();
+
+    const [kotNo, setKotCountExpire] = await Promise.all([
+      kotNoPromise,
+      redisClient.EXPIREAT(`${payload.restaurantId}:kotCount`, dateTime, "NX"),
+    ]);
+
     await redis_create_Functions.createOrder({
       // cart: 0,
       createdAt,
@@ -67,6 +75,8 @@ export class OrdersService {
       sessionId,
       tableNumber,
       tableSectionId,
+      kotNo,
+      printCount: 0,
       orders: [
         {
           // cart: 0,
@@ -135,6 +145,8 @@ export class OrdersService {
           sessionId,
           tableNumber,
           tableSectionId,
+          kotNo,
+          printCount: 0,
           orders: [
             {
               // cart: 0,
@@ -175,6 +187,10 @@ export class OrdersService {
         LIMIT: {
           from: 0,
           size: 10000,
+        },
+        SORTBY: {
+          BY: "createdAt",
+          DIRECTION: "ASC",
         },
       },
     );
@@ -388,5 +404,17 @@ export class OrdersService {
     // await Promise.all([fullQuantityUpdatePromis, halfQuantityUpdatePromis]);
 
     return constants.OK;
+  }
+
+  async incrementPrintCount(kotId: KotId) {
+    const { kotId: kot_id } = kotId;
+    try {
+      await redisClient.json.NUMINCRBY(kot_id, "$.printCount", 1);
+
+      return constants.OK;
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException();
+    }
   }
 }

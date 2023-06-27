@@ -186,7 +186,7 @@ export class SessionsService {
           dishesh: true,
         },
       })
-    ).dishesh;
+    )?.dishesh;
 
     const getOrderPrice_impure = (order: NewOrderType) => {
       const dish = disheshInfo.find((dish) => dish.id === order.dishId);
@@ -203,7 +203,7 @@ export class SessionsService {
       return returnPrice;
     };
 
-    const promiseContainer = [];
+    let promiseContainer = [];
 
     for (const kot of jsonOrdersType) {
       const { id, value } = kot;
@@ -215,7 +215,7 @@ export class SessionsService {
           tableNumber: value.tableNumber,
           chefId: value?.chefAssign || null,
           sessionLogsId: value.sessionId,
-          waiterId: value?.orderedBy || null,
+          waiterId: value?.orderedBy === "self" ? null : value?.orderedBy,
           tableId: value.tableSectionId,
         },
         select: {
@@ -245,7 +245,7 @@ export class SessionsService {
             tableNumber: order.tableNumber,
             user_description: order.user_description,
             orderBy: value.orderedBy === "self" ? "self" : "waiter",
-            waiterId: value?.orderedBy || null,
+            waiterId: value?.orderedBy === "self" ? null : value?.orderedBy,
             chefId: value?.chefAssign || null,
             sessionLogsId: value.sessionId,
           },
@@ -274,11 +274,12 @@ export class SessionsService {
             },
           });
 
-        promiseContainer.concat([
+        promiseContainer = [
+          ...promiseContainer,
           createDishDataPromise,
           createKotOrderPromise,
           restaurantRevenueCreatePromise,
-        ]);
+        ];
       }
     }
 

@@ -8,7 +8,7 @@ import {
   Delete,
 } from "@nestjs/common";
 import { OrdersService } from "./orders.service";
-import { CreateOrderDto } from "./dto/create-order.dto";
+import { CreateOrderDto, KotId } from "./dto/create-order.dto";
 import { GetJwtPayload } from "src/decorators";
 import { JwtPayload_restaurantId } from "src/Interfaces";
 import { UpdateOrderStatusDto } from "./dto/update-orderStatus.dto";
@@ -43,6 +43,11 @@ export class OrdersController {
     @GetJwtPayload() payload: JwtPayload_restaurantId,
   ) {
     return this.ordersService.acceptOrder(payload, dto);
+  }
+
+  @Patch("incrementPrintCount")
+  incrementPrintCount(@Body() kotId: KotId) {
+    return this.ordersService.incrementPrintCount(kotId);
   }
 
   @Patch("reject")

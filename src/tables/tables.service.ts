@@ -87,4 +87,24 @@ export class TablesService {
       });
     }
   }
+
+  async getTables(payload: JwtPayload_restaurantId) {
+    try {
+      const data = (
+        await this.prisma.restaurant.findUnique({
+          where: {
+            id: payload.restaurantId,
+          },
+          select: {
+            tables: true,
+          },
+        })
+      )?.tables;
+
+      return data;
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException();
+    }
+  }
 }

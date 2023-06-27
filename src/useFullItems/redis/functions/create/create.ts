@@ -35,6 +35,8 @@ export interface KotCreation {
   sessionId: string;
   chefAssign?: string;
   orders: NewOrderType[];
+  kotNo: number;
+  printCount: number;
 }
 
 export type NewOrderType = {
@@ -104,6 +106,8 @@ export const redis_create_Functions = {
       sessionId: props.sessionId,
       chefAssign: "",
       orders: props.orders,
+      kotNo: props.kotNo,
+      printCount: props.printCount,
     });
   },
 

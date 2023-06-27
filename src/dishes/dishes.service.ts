@@ -152,4 +152,24 @@ export class DishesService {
       });
     }
   }
+
+  async getDish(payload: JwtPayload_restaurantId) {
+    try {
+      const data = (
+        await this.prisma.restaurant.findUnique({
+          where: {
+            id: payload.restaurantId,
+          },
+          select: {
+            dishesh: true,
+          },
+        })
+      )?.dishesh;
+
+      return data;
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException();
+    }
+  }
 }

@@ -22,6 +22,7 @@ import { DishModule } from "./analysis/dish/dish.module";
 import { ManagerModule } from "./manager/manager.module";
 import { KotModule } from "./kot/kot.module";
 import { TemplatesModule } from "./restaurant-stuff/templates/templates.module";
+import { KotMachineModule } from './kot-machine/kot-machine.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { TemplatesModule } from "./restaurant-stuff/templates/templates.module";
     ManagerModule,
     KotModule,
     TemplatesModule,
+    KotMachineModule,
   ],
 })
 export class AppModule {}

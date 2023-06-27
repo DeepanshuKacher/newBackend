@@ -24,6 +24,7 @@ import { redisClient, constants, redisConstants } from "../useFullItems";
 import type { Response, Request } from "express";
 import { MailServiceService } from "src/mail-service/mail-service.service";
 import { ResetPasswordDto, ResetPasswordFinal } from "./dto/resetPassword.dto";
+import { Manager, Owner } from ".prisma/client";
 
 @Injectable()
 export class AuthService {
@@ -87,9 +88,18 @@ export class AuthService {
 
   async signin(dto: SignInDto, response: Response) {
     // search in database for match emailid
-    const user = await this.prisma.owner.findUnique({
-      where: { email: dto.email },
-    });
+
+    let user: Owner | Manager;
+
+    if (dto.userType === "Owner") {
+      user = await this.prisma.owner.findUnique({
+        where: { email: dto.email },
+      });
+    } else if (dto.userType === "Manager") {
+      user = await this.prisma.manager.findUnique({
+        where: { email: dto.email },
+      });
+    }
 
     if (!user) throw new ForbiddenException("Invalid Credentials");
 
@@ -133,7 +143,8 @@ export class AuthService {
 
   async getJwt(response: Response, request: Request, dto: GetJwtDto) {
     const sessionId = request.signedCookies[constants.sessionId];
-    const userType = request.signedCookies[constants.userType];
+    const userType: UserType = request.signedCookies[constants.userType];
+
 
     if (!sessionId) throw new ForbiddenException();
 
@@ -147,20 +158,44 @@ export class AuthService {
     //   select: { id: true },
     // });
 
-    const restaurant = await this.prisma.restaurant.findUnique({
-      where: { id: dto.restaurantId },
-      select: { ownerId: true, id: true },
-    });
+    if (userType === "Manager") {
+      const restaurantAndManagerDetail =
+        await this.prisma.restaurant.findUnique({
+          where: {
+            id: dto.restaurantId,
+          },
+          select: {
+            manager: {
+              where: {
+                id: sessionId,
+              },
+            },
+          },
+        });
+      if (!restaurantAndManagerDetail) throw new ForbiddenException();
+      if (sessionId !== restaurantAndManagerDetail.manager[0].id)
+        throw new ForbiddenException();
 
-    if (!restaurant) throw new ForbiddenException();
+      return this.jwt_token_with_restaurantId({
+        userId: restaurantAndManagerDetail.manager[0].id,
+        restaurantId: dto.restaurantId,
+        userType,
+      });
+    } else if (userType === "Owner") {
+      const restaurant = await this.prisma.restaurant.findUnique({
+        where: { id: dto.restaurantId },
+        select: { ownerId: true, id: true },
+      });
 
-    if (sessionId !== restaurant?.ownerId) throw new ForbiddenException();
+      if (!restaurant) throw new ForbiddenException();
+      if (sessionId !== restaurant?.ownerId) throw new ForbiddenException();
 
-    return this.jwt_token_with_restaurantId({
-      userId: restaurant.ownerId,
-      restaurantId: restaurant.id,
-      userType,
-    });
+      return this.jwt_token_with_restaurantId({
+        userId: restaurant.ownerId,
+        restaurantId: restaurant.id,
+        userType,
+      });
+    }
   }
 
   jwt_token_with_restaurantId(payload: JwtPayload_restaurantId) {
