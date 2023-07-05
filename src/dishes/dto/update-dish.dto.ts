@@ -50,4 +50,8 @@ export class UpdateDishDto {
   @IsBoolean()
   @IsOptional()
   available?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  dishCode?: number;
 }

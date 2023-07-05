@@ -16,20 +16,37 @@ export enum Size {
   Small = "Small",
 }
 
+enum HalfFull {
+  half = "fullQuantity",
+  full = "halfQuantity",
+}
+
 export class UpdateOrderDto {
   @IsString()
   @IsNotEmpty()
   orderId: string;
 
-  @IsInt()
-  // @IsPositive()
-  @Type(() => Number)
-  @IsOptional()
-  halfQuantity?: number;
+  @IsString()
+  @IsNotEmpty()
+  kotId: string;
+
+  @IsEnum(HalfFull)
+  @IsNotEmpty()
+  halfFull: HalfFull;
 
   @IsInt()
-  // @IsPositive()
-  @Type(() => Number)
-  @IsOptional()
-  fullQuantity?: number;
+  @IsNotEmpty()
+  newQuantity: number;
+
+  // @IsInt()
+  // // @IsPositive()
+  // @Type(() => Number)
+  // @IsOptional()
+  // halfQuantity?: number;
+
+  // @IsInt()
+  // // @IsPositive()
+  // @Type(() => Number)
+  // @IsOptional()
+  // fullQuantity?: number;
 }

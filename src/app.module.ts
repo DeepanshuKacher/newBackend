@@ -20,9 +20,9 @@ import { GlobalPrismaFunctionsModule } from "./global-prisma-functions/global-pr
 import { RevenueModule } from "./analysis/revenue/revenue.module";
 import { DishModule } from "./analysis/dish/dish.module";
 import { ManagerModule } from "./manager/manager.module";
-import { KotModule } from "./kot/kot.module";
 import { TemplatesModule } from "./restaurant-stuff/templates/templates.module";
-import { KotMachineModule } from './kot-machine/kot-machine.module';
+import { KotMachineModule } from "./kot-machine/kot-machine.module";
+import { ParcelModule } from "./parcel/parcel.module";
 
 @Module({
   imports: [
@@ -47,9 +47,9 @@ import { KotMachineModule } from './kot-machine/kot-machine.module';
     RevenueModule,
     DishModule,
     ManagerModule,
-    KotModule,
     TemplatesModule,
     KotMachineModule,
+    ParcelModule,
   ],
 })
 export class AppModule {}

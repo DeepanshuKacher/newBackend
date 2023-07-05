@@ -24,6 +24,7 @@ export const constants = {
   OTP: "OTP",
   ZADD_SCORE: 1,
   States: "States",
+  parcel: "parcel",
   IS_DEVELOPMENT: workEnvironment === NodeEnvironment.DEVELOPMENT,
   IS_PRODUCTION: workEnvironment === NodeEnvironment.PRODUCTION,
   timeConstants: {

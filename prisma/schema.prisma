@@ -126,6 +126,7 @@ model Restaurant {
   billPrintTemplate BillPrintTemplate?
   RestaurantRevenue RestaurantRevenue[]
   KotOrder          KotOrder[]
+  KotLog            KotLog[]
 }
 
 type RestaurantSettings_Waiter {
@@ -167,6 +168,7 @@ model Dish {
   imageUrl    String?
   addOns      AddOns[]
   price       SizePrice
+  dishCode    Int?
 
   available Boolean @default(true)
 
@@ -262,9 +264,11 @@ model SessionLogs {
 enum OrderBy {
   waiter
   self
+  manager
 }
 
 model KotOrder {
+  // KotOrder is child of KotLogs
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
   dateTime DateTime
@@ -286,7 +290,7 @@ model KotOrder {
   table   Table?  @relation(fields: [tableId], references: [id])
   tableId String? @db.ObjectId
 
-  tableNumber Int
+  tableNumber Int?
 
   user_description String?
 
@@ -305,13 +309,15 @@ model KotOrder {
 model KotLog {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  session       SessionLogs @relation(fields: [sessionLogsId], references: [id], onDelete: Cascade)
-  sessionLogsId String      @db.ObjectId
+  parcel Boolean? @default(false)
+
+  session       SessionLogs? @relation(fields: [sessionLogsId], references: [id], onDelete: Cascade)
+  sessionLogsId String?      @db.ObjectId
 
   table   Table?  @relation(fields: [tableId], references: [id], onDelete: Cascade)
   tableId String? @db.ObjectId
 
-  tableNumber Int
+  tableNumber Int?
 
   orderedBy OrderBy
 
@@ -321,6 +327,9 @@ model KotLog {
   chef     Chef?      @relation(fields: [chefId], references: [id])
   chefId   String?    @db.ObjectId
   KotOrder KotOrder[]
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String     @db.ObjectId
 
   createdAt DateTime
 }
@@ -341,4 +350,6 @@ model RestaurantRevenue {
   date DateTime @db.Date
 
   modeOfIncome ModeOfIncome?
+
+  parcelRevenue Boolean? @default(false)
 }

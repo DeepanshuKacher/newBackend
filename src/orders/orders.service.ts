@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from "@nestjs/common";
 import { JwtPayload_restaurantId, RetreveKotJson } from "src/Interfaces";
 import {
@@ -363,29 +364,84 @@ export class OrdersService {
             createdAt: "asc",
           },
         });
+      default:
+        return this.prisma.kotLog.findMany({
+          where: {
+            restaurantId: payload.restaurantId,
+          },
+          include: {
+            KotOrder: true,
+            table: true,
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
+        });
     }
   }
 
   async deleteOrder(dto: DeleteOrderDto) {
-    const { orderId, sessionId } = dto;
+    const { orderId, kotId } = dto;
+
+    const kotDetail: any = await redisClient.json.GET(kotId);
+
+    if (!kotDetail) throw new NotFoundException();
+
+    const kotDetailType: KotCreation = kotDetail;
+
+    if (kotDetailType?.orders?.length === 1) {
+      await redisClient.json.DEL(kotId);
+      return constants.OK;
+    }
+
+    const deleteOrderIndex = kotDetailType?.orders?.findIndex(
+      (value) => value.orderId === orderId,
+    );
+
+    await redisClient.json.ARRPOP(kotId, "$.orders", deleteOrderIndex);
+
+    return constants.OK;
+
     // const sessionOrders = await redisGetFunction.orderKeysArrayFromSessionUUID(
     //   sessionId,
     // );
 
-    await redisClient.lRem(
-      redisConstants.sessionKey(sessionId),
-      1,
-      redisConstants.orderKey(orderId),
-    );
+    // await redisClient.lRem(
+    //   redisConstants.sessionKey(sessionId),
+    //   1,
+    //   redisConstants.orderKey(orderId),
+    // );
 
-    return constants.OK;
+    // return constants.OK;
 
     // console.log({ sessionOrders, orderId: redisConstants.orderKey(orderId) });
   }
   async updateOrder(dto: UpdateOrderDto) {
-    const { orderId, fullQuantity, halfQuantity } = dto;
+    const { orderId, halfFull, kotId, newQuantity } = dto;
 
-    if (fullQuantity)
+    console.log({ kotId });
+
+    const data: any = await redisClient.json.GET(kotId);
+
+    if (!data) throw new NotFoundException();
+
+    const kotDetailType: KotCreation = data;
+
+    const orderIndex = kotDetailType?.orders?.findIndex(
+      (item) => item.orderId === orderId,
+    );
+
+    if (orderIndex === -1) throw new NotFoundException();
+
+    await redisClient.json.SET(
+      kotId,
+      `$.orders[${orderIndex}].${halfFull}`,
+      newQuantity,
+    );
+
+    return constants.OK;
+
+    /*   if (fullQuantity)
       // const fullQuantityUpdate =
       await redis_update_functions.updateOrderQuantity(
         orderId,
@@ -403,7 +459,7 @@ export class OrdersService {
 
     // await Promise.all([fullQuantityUpdatePromis, halfQuantityUpdatePromis]);
 
-    return constants.OK;
+ */
   }
 
   async incrementPrintCount(kotId: KotId) {

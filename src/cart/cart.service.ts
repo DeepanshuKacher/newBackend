@@ -322,54 +322,17 @@ export class CartService {
   }
 
   async deleteCartOrder(dto: DeleteCartOrderDTO) {
-    const { cartOrder, tableSessionId } = dto;
+    const { cartOrder } = dto;
 
-    const deleteOrderKeyObject = {};
-    const orderKeys = cartOrder.map((orderUUID) => {
-      const key = redisConstants.orderKey(orderUUID);
-      deleteOrderKeyObject[key] = key;
-      return key;
-    });
+    let promiseContainer = [];
 
-    const ordersInCart = await redisGetFunction
-      .cartSession(tableSessionId)
-      // .then((orderKeysArray) =>
-      // orderKeysArray.filter((orderKey) => !orderKeyObject[orderKey]),
-      // )
-      .catch((error) => {
-        console.log(error);
-        throw new InternalServerErrorException();
-      });
-
-    const ordersInCartObject =
-      functionsObject.arrayToObject<string>(ordersInCart);
-
-    for (let x in deleteOrderKeyObject) {
-      if (!ordersInCartObject[x]) throw new ConflictException();
+    for (let x of cartOrder) {
+      promiseContainer = [...promiseContainer, redisClient.DEL(x)];
     }
-
-    const preserveOrderKeys: string[] = [];
-
-    for (let x in ordersInCartObject) {
-      if (!deleteOrderKeyObject[x]) preserveOrderKeys.push(x);
-    }
-
-    const deleteCart = redisClient.DEL(
-      redisConstants.cartSessionKey(tableSessionId),
-    );
-
-    const deleteOrders = redisClient.DEL(orderKeys);
 
     try {
-      if (preserveOrderKeys.length > 0) {
-        const createCartSession = redisClient.RPUSH(
-          redisConstants.cartSessionKey(tableSessionId),
-          preserveOrderKeys,
-        );
-        await Promise.all([deleteCart, deleteOrders, createCartSession]);
-      } else {
-        await Promise.all([deleteCart, deleteOrders]);
-      }
+      await Promise.all(promiseContainer);
+
       return constants.OK;
     } catch (error) {
       console.log(error);

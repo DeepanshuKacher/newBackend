@@ -205,6 +205,8 @@ export class SessionsService {
 
     let promiseContainer = [];
 
+    let totalBilled = 0;
+
     for (const kot of jsonOrdersType) {
       const { id, value } = kot;
 
@@ -217,17 +219,18 @@ export class SessionsService {
           sessionLogsId: value.sessionId,
           waiterId: value?.orderedBy === "self" ? null : value?.orderedBy,
           tableId: value.tableSectionId,
+          restaurantId: payload.restaurantId,
         },
         select: {
           id: true,
         },
       });
 
-      const expireKotPromise = redisClient.expire(id, 24 * 60 * 60);
+      const deleteKotPromise = redisClient.DEL(kot.id);
 
       const [kotLog, expireKot] = await Promise.all([
         kotLogPromise,
-        expireKotPromise,
+        deleteKotPromise,
       ]);
 
       for (const order of kot.value.orders) {
@@ -262,28 +265,33 @@ export class SessionsService {
           },
         });
 
-        const restaurantRevenueCreatePromise =
-          this.prisma.restaurantRevenue.create({
-            data: {
-              restaurantId: payload.restaurantId,
-              revenueGenerated: getOrderPrice_impure(order),
-              date: DateTime.now()
-                .setZone(constants.IndiaTimeZone)
-                .startOf("day")
-                .toISO(),
-            },
-          });
+        totalBilled += getOrderPrice_impure(order);
 
         promiseContainer = [
           ...promiseContainer,
           createDishDataPromise,
           createKotOrderPromise,
-          restaurantRevenueCreatePromise,
+          // restaurantRevenueCreatePromise,
         ];
       }
     }
 
-    await Promise.all(promiseContainer);
+    const restaurantRevenueCreatePromise = this.prisma.restaurantRevenue.create(
+      {
+        data: {
+          restaurantId: payload.restaurantId,
+          revenueGenerated: totalBilled,
+          date: DateTime.now()
+            .setZone(constants.IndiaTimeZone)
+            .startOf("day")
+            .toISO(),
+        },
+      },
+    );
+
+    promiseContainer = [...promiseContainer, restaurantRevenueCreatePromise];
+
+    // let deleteCartPromiseContainer = [];
 
     // delete cart
     const cartData = (
@@ -300,17 +308,23 @@ export class SessionsService {
     ).documents;
 
     for (const x of cartData) {
-      await redisClient.DEL(x.id);
+      promiseContainer = [...promiseContainer, redisClient.DEL(x.id)];
     }
 
+    // await Promise.all(deleteCartPromiseContainer);
+
     // detach session from table
-    const detachSessionFromTable = await redisClient.HDEL(
+    const detachSessionFromTablePromise = redisClient.HDEL(
       redisConstants.tablesStatusKey(payload.restaurantId),
       redisConstants.tableSessionKeyForTablesStatus(
         tableSectionId,
         tableNumber,
       ),
     );
+
+    promiseContainer = [...promiseContainer, detachSessionFromTablePromise];
+
+    await Promise.all(promiseContainer);
 
     // mqtt publish
     mqttPublish.sessionStartConfirmation(
@@ -319,7 +333,7 @@ export class SessionsService {
       createSessionDto.tableNumber,
       null,
     );
-    // set expiry to kot
+    // delete kot
 
     return constants.OK;
 
