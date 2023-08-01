@@ -347,7 +347,9 @@ model RestaurantRevenue {
 
   revenueGenerated Float
 
-  date DateTime @db.Date
+  // date DateTime @db.Date
+
+  dateTime DateTime? @default(now())
 
   modeOfIncome ModeOfIncome?
 

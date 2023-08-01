@@ -152,12 +152,16 @@ export class SessionsService {
   ) {
     const { tableNumber, tableSectionId } = createSessionDto;
 
+    const startTime = Date.now();
+
     const tableSessionIdFromTableInfo =
       await redisGetFunction.sessionIdFromTableInfo(
         payload.restaurantId,
         tableSectionId,
         tableNumber,
       );
+
+    console.log(Date.now() - startTime);
 
     if (tableSessionIdFromTableInfo !== redisConstants.sessionKey(sessionId))
       throw new ConflictException("Invalid Session");
@@ -175,6 +179,8 @@ export class SessionsService {
       )
     ).documents;
 
+    console.log(Date.now() - startTime);
+
     const jsonOrdersType: RetreveKotJson[] = jsonOrders;
 
     const disheshInfo = (
@@ -187,6 +193,8 @@ export class SessionsService {
         },
       })
     )?.dishesh;
+
+    console.log(Date.now() - startTime);
 
     const getOrderPrice_impure = (order: NewOrderType) => {
       const dish = disheshInfo.find((dish) => dish.id === order.dishId);
@@ -232,6 +240,8 @@ export class SessionsService {
         kotLogPromise,
         deleteKotPromise,
       ]);
+
+      console.log(Date.now() - startTime);
 
       for (const order of kot.value.orders) {
         const createKotOrderPromise = this.prisma.kotOrder.create({
@@ -281,10 +291,6 @@ export class SessionsService {
         data: {
           restaurantId: payload.restaurantId,
           revenueGenerated: totalBilled,
-          date: DateTime.now()
-            .setZone(constants.IndiaTimeZone)
-            .startOf("day")
-            .toISO(),
         },
       },
     );
@@ -307,6 +313,8 @@ export class SessionsService {
       )
     ).documents;
 
+    console.log(Date.now() - startTime);
+
     for (const x of cartData) {
       promiseContainer = [...promiseContainer, redisClient.DEL(x.id)];
     }
@@ -326,6 +334,8 @@ export class SessionsService {
 
     await Promise.all(promiseContainer);
 
+    console.log(Date.now() - startTime);
+
     // mqtt publish
     mqttPublish.sessionStartConfirmation(
       payload.restaurantId,
@@ -334,6 +344,8 @@ export class SessionsService {
       null,
     );
     // delete kot
+
+    console.log(Date.now() - startTime);
 
     return constants.OK;
 

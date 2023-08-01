@@ -419,8 +419,6 @@ export class OrdersService {
   async updateOrder(dto: UpdateOrderDto) {
     const { orderId, halfFull, kotId, newQuantity } = dto;
 
-    console.log({ kotId });
-
     const data: any = await redisClient.json.GET(kotId);
 
     if (!data) throw new NotFoundException();

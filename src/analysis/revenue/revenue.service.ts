@@ -16,64 +16,13 @@ export class RevenueService {
     if (!(userType === "Owner" || userType === "Manager"))
       throw new UnauthorizedException();
 
-    return this.prisma.restaurantRevenue.groupBy({
+    return this.prisma.restaurantRevenue.findMany({
       where: {
         restaurantId: payload.restaurantId,
-        date: {
-          gte: DateTime.fromISO(startDate)
-            .setZone(constants.IndiaTimeZone)
-            .startOf("day")
-            .toISO(),
-
-          lte: DateTime.fromISO(endDate)
-            .setZone(constants.IndiaTimeZone)
-            .endOf("day")
-            .toISO(),
+        dateTime: {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
         },
-      },
-      by: ["date"],
-      _sum: {
-        revenueGenerated: true,
-      },
-    });
-
-    return this.prisma.restaurantRevenue.groupBy({
-      by: ["date"],
-      where: {
-        id: payload.restaurantId,
-        date: {
-          gte: DateTime.fromISO(startDate)
-            .setZone(constants.IndiaTimeZone)
-            .startOf("day")
-            .toISO(),
-          lte: DateTime.fromISO(endDate)
-            .setZone(constants.IndiaTimeZone)
-            .endOf("day")
-            .toISO(),
-        },
-      },
-      _sum: {
-        revenueGenerated: true,
-      },
-      orderBy: {
-        date: "asc",
-      },
-    });
-
-    return this.prisma.dishData.groupBy({
-      by: ["dateOfOrder"],
-      where: {
-        restaurantId: payload.restaurantId,
-        dateOfOrder: {
-          gte: DateTime.fromISO(startDate).startOf("day").toISO(),
-          lte: DateTime.fromISO(endDate).startOf("day").toISO(),
-        },
-      },
-      _sum: {
-        cost: true,
-      },
-      orderBy: {
-        dateOfOrder: "asc",
       },
     });
   }

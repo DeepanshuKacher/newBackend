@@ -103,7 +103,6 @@ export class ParcelService {
           (total, order) => total + getOrderPrice_impure(order),
           0,
         ),
-        date: DateTime.now().setZone(constants.IndiaTimeZone).toISO(),
         parcelRevenue: true,
       },
     });
