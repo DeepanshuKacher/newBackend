@@ -12,10 +12,17 @@ const config = new ConfigService();
 //   protocol: "mqtts",
 //   clientId: "nodejs_backend",
 // });
-const client = mqtt.connect("wss://mqtt.eatrofoods.com:8883", {
-  username: config.get("mqttUsername"),
-  password: config.get("mqttPassword"),
-});
+
+const returnMqttClient = () => {
+  const enviornment = config.get('NODE_ENV')
+
+  if (enviornment === 'DEVELOPMENT') return mqtt.connect({
+    host: config.get('mqtthost_dev'),
+    port: config.get('mqttport')
+  })
+}
+
+const client = returnMqttClient()
 
 client.on("connect", function () {
   console.log("mqtt connected");

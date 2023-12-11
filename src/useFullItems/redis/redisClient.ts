@@ -4,8 +4,12 @@ import { SchemaFieldTypes, createClient, createCluster } from "redis";
 const config = new ConfigService();
 
 const client = createClient({
-  url: "redis://redis6.eatrofoods.com",
-  password: "2$7{-WO^d_aAsJW",
+  // url: config.get('REDIS_URL'),
+  socket: {
+    host: config.get('REDIS_HOST'),
+    port: config.get('REDIS_PORT')
+  },
+  password: config.get('REDIS_PASSWORD'),
 });
 
 // const client = createClient({

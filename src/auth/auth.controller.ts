@@ -9,7 +9,7 @@ import { ResetPasswordDto, ResetPasswordFinal } from "./dto/resetPassword.dto";
 @Public()
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly authservice: AuthService) {}
+  constructor(private readonly authservice: AuthService) { }
 
   @Post("/jwt")
   getJwt(
@@ -32,6 +32,7 @@ export class AuthController {
 
   @Post("mailotp")
   async sendMail(@Body() email: EmailDto) {
+    if (constants.IS_DEVELOPMENT) console.log('mail opt hit');
     return this.authservice.verifyemail(email);
   }
 

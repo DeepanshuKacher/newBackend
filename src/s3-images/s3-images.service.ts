@@ -30,7 +30,7 @@ export class S3ImagesService {
         Bucket: constants.s3Bucket,
         Key: privateContstants.objectKey(restaurantId, name),
         Body: file?.buffer,
-        ACL: "public-read	",
+        ACL: "public-read",
       };
       this.s3Client.send(new PutObjectCommand(bucketParams));
     } catch (error) {
