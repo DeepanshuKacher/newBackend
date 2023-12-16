@@ -1,5 +1,5 @@
-import { DishSize } from "@prisma/client";
 import { Type } from "class-transformer";
+import { Order as OrderItem } from "../../Interfaces";
 import {
   IsArray,
   IsEnum,
@@ -10,6 +10,7 @@ import {
   IsString,
   ValidateNested,
 } from "class-validator";
+import { DishSize } from "@prisma/client";
 
 class Order {
   @IsMongoId()
@@ -18,7 +19,7 @@ class Order {
 
   @IsEnum(DishSize)
   @IsNotEmpty()
-  size: DishSize;
+  size: OrderItem["size"];
 
   @IsOptional()
   @IsInt()

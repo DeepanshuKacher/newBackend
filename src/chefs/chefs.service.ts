@@ -9,17 +9,17 @@ import { UserType } from "src/auth/dto";
 import { JwtPayload_restaurantId } from "src/Interfaces";
 import { MailServiceService } from "src/mail-service/mail-service.service";
 import { PrismaService } from "src/prisma/prisma.service";
-import { S3ImagesService } from "src/s3-images/s3-images.service";
+// import { S3ImagesService } from "src/s3-images/s3-images.service";
 import { constants, redisClient } from "src/useFullItems";
 import { CreateChefDto } from "./dto/create-chef.dto";
-import { UpdateChefDto } from "./dto/update-chef.dto";
+// import { UpdateChefDto } from "./dto/update-chef.dto";
 import { GlobalPrismaFunctionsService } from "src/global-prisma-functions/global-prisma-functions.service";
 
 @Injectable()
 export class ChefsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly s3Images: S3ImagesService,
+    // private readonly s3Images: S3ImagesService,
     private readonly authService: AuthService,
     private readonly mailService: MailServiceService,
     private readonly globalPrismaFunction: GlobalPrismaFunctionsService,
@@ -72,21 +72,21 @@ export class ChefsService {
       },
     });
 
-    if (passportImage)
-      /* this is not async no need for await */
-      this.s3Images.createImage(
-        constants.workerPassportPhoto(dto.name),
-        payload.restaurantId,
-        passportImage,
-      );
+    // if (passportImage)
+    //   /* this is not async no need for await */
+    //   this.s3Images.createImage(
+    //     constants.workerPassportPhoto(dto.name),
+    //     payload.restaurantId,
+    //     passportImage,
+    //   );
 
-    if (idProof)
-      /* this is not async no need for await */
-      this.s3Images.createImage(
-        constants.workerIdentityPhoto(dto.name),
-        payload.restaurantId,
-        idProof,
-      );
+    // if (idProof)
+    //   /* this is not async no need for await */
+    //   this.s3Images.createImage(
+    //     constants.workerIdentityPhoto(dto.name),
+    //     payload.restaurantId,
+    //     idProof,
+    //   );
 
     const ownerEmail = this.prisma.owner.findUnique({
       where: { id: payload.userId },
@@ -218,15 +218,15 @@ export class ChefsService {
 
   async remove(id: string, payload: JwtPayload_restaurantId) {
     try {
-      this.s3Images.deleteImage(
-        payload.restaurantId,
-        constants.workerPassportPhoto(id),
-      );
+      // this.s3Images.deleteImage(
+      //   payload.restaurantId,
+      //   constants.workerPassportPhoto(id),
+      // );
 
-      this.s3Images.deleteImage(
-        payload.restaurantId,
-        constants.workerIdentityPhoto(id),
-      );
+      // this.s3Images.deleteImage(
+      //   payload.restaurantId,
+      //   constants.workerIdentityPhoto(id),
+      // );
 
       const updateCommitPromis =
         this.globalPrismaFunction.updateRestaurantCommitUUID(

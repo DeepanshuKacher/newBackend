@@ -32,7 +32,6 @@ export class AuthController {
 
   @Post("mailotp")
   async sendMail(@Body() email: EmailDto) {
-    if (constants.IS_DEVELOPMENT) console.log('mail opt hit');
     return this.authservice.verifyemail(email);
   }
 

@@ -8,7 +8,6 @@ import { JwtPayload_restaurantId, RetreveKotJson } from "src/Interfaces";
 import {
   constants,
   NewOrderType,
-  Order,
   redisClient,
   redisConstants,
   redisGetFunction,
@@ -113,21 +112,21 @@ export class SessionsService {
   async getTableOrders(sessionUUID: string) {
     try {
       // return redisGetFunction.getOrdersObjectFromSessionUUID(sessionUUID);
-      // console.log(sessionUUID);
+      console.log({ sessionUUID });
 
       const jsonOrders = await redisClient.ft.search(
         redisConstants.restaurantOrderIndex,
         `@sessionId:{${sessionUUID}}`,
-        {
-          LIMIT: {
-            from: 0,
-            size: 10000,
-          },
-          SORTBY: {
-            BY: "createdAt",
-            DIRECTION: "ASC",
-          },
-        },
+        // {
+        //   LIMIT: {
+        //     from: 0,
+        //     size: 10000,
+        //   },
+        //   SORTBY: {
+        //     BY: "createdAt",
+        //     DIRECTION: "ASC",
+        //   },
+        // },
       );
 
       // console.log(jsonOrders.documents[0]);
@@ -135,6 +134,8 @@ export class SessionsService {
 
       // console.log(jsonOrders.documents[0]);
       // console.log(jsonOrders.documents[0].value.orders);
+
+      console.log(jsonOrders);
 
       return jsonOrders.documents;
     } catch (error) {

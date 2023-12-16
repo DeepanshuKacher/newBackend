@@ -25,7 +25,6 @@ export class S3ImagesService {
 
   createImage(name: string, restaurantId: string, file: Express.Multer.File) {
     try {
-
       const bucketParams: PutObjectCommandInput = {
         Bucket: constants.s3Bucket,
         Key: privateContstants.objectKey(restaurantId, name),

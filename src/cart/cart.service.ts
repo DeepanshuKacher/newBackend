@@ -4,7 +4,11 @@ import {
   Injectable,
   InternalServerErrorException,
 } from "@nestjs/common";
-import { JwtPayload_restaurantId } from "src/Interfaces";
+import {
+  CartItem,
+  CartItemRedisReturn,
+  JwtPayload_restaurantId,
+} from "src/Interfaces";
 import { CreateOrderDto } from "src/orders/dto/create-order.dto";
 import {
   redis_create_Functions,
@@ -13,7 +17,6 @@ import {
   redisConstants,
   redisClient,
   mqttPublish,
-  Order,
   functionsObject,
   NewOrderType,
   OrderProps,
@@ -39,21 +42,6 @@ export class CartService {
       halfQuantity,
     } = createOrderDto;
 
-    const orderId = constants.workerTokenGenerator(16);
-
-    // const createOrder = redis_create_Functions.createOrder({
-    //   dishId,
-    //   orderId,
-    //   tableNumber,
-    //   tableSectionId,
-    //   user_description,
-    //   size,
-    //   fullQuantity,
-    //   halfQuantity,
-    //   orderedBy: payload.userId,
-    //   createdAt: DateTime.now().setZone(constants.IndiaTimeZone).toISO(),
-    // });
-
     if (!(fullQuantity || halfQuantity)) throw new ForbiddenException();
 
     const sessionIdFromRedis = await redisGetFunction.sessionIdFromTableInfo(
@@ -78,7 +66,6 @@ export class CartService {
       const orderId = constants.workerTokenGenerator(16);
 
       await redis_create_Functions.createCartOrder({
-        // cart: 1,
         dishId,
         fullQuantity: fullQuantity || 0,
         halfQuantity: halfQuantity || 0,
@@ -90,6 +77,7 @@ export class CartService {
         tableNumber,
         tableSectionId,
         user_description,
+        createdAt: Date.now(),
       });
 
       return constants.OK;
@@ -120,16 +108,6 @@ export class CartService {
         },
       )
     )?.documents;
-
-    // console.log(cartOrders);
-
-    // const promises = [];
-
-    // for (let x of cartOrders) {
-    //   promises.push(redisClient.HGETALL(x));
-    // }
-
-    // return Promise.all(promises);
   }
 
   async convertCartItemToOrder(
@@ -149,125 +127,96 @@ export class CartService {
     if (sessionIdFromRedis !== redisConstants.sessionKey(tableSessionId))
       throw new ConflictException();
 
-    // const orderKeys: string[] = [];
-
-    // const selectedOrderPromis = [];
-
-    // for (let x of cartOrder) {
-    //   selectedOrderPromis.push(redisGetFunction.getOrder(x));
-    // }
-
-    // for (let x of cartOrder) {
-    //   orderKeys.push(redisConstants.orderKey(x));
-    // }
-
-    // const cartOrders = await redisGetFunction.cartSession(tableSessionId);
-
-    // for (let x of cartOrder) {
-    //   if (!cartOrders.includes(redisConstants.orderKey(x)))
-    //     throw new ConflictException();
-    // }
-
-    // const pushOrderToTableSessionPromis = redisClient.RPUSH(
-    //   redisConstants.sessionKey(tableSessionId),
-    //   orderKeys,
-    // );
-
-    // const pushOrderToRestaurantContainerPromis = redisClient.RPUSH(
-    //   redisConstants.restaurantRealtimeOrdersContainer_Today_Key(
-    //     payload.restaurantId,
-    //   ),
-    //   orderKeys,
-    // );
-
-    // const randomUUID_forKot = constants.workerTokenGenerator(16);
-
-    // const createKotPromise = redis_create_Functions.kot(
-    //   randomUUID_forKot,
-    //   cartOrders,
-    // );
-
-    // const pushKotToRestaurantContainerPromise =
-    //   redis_create_Functions.restaurantKotContainerPush(
-    //     payload.restaurantId,
-    //     redisConstants.kot_key(randomUUID_forKot),
-    //   );
-
     try {
-      // const [pushOrderToTableSession, pushOrderToRestaurantContainer] =
-      //   await Promise.all([
-      //     pushOrderToTableSessionPromis,
-      //     pushOrderToRestaurantContainerPromis,
-      //     createKotPromise,
-      //     pushKotToRestaurantContainerPromise,
-      //   ]);
-
-      // console.log({ cartOrder });
-
       const promiseContainer: Promise<{ [x: string]: string }>[] = [];
 
-      for (let x of cartOrder) {
+      for (const x of cartOrder) {
         promiseContainer.push(redisClient.HGETALL(x));
       }
 
       const temp: any = await Promise.all(promiseContainer);
 
-      const cartContainer: {
-        size: OrderProps["size"];
-        fullQuantity: string;
-        halfQuantity: string;
-        user_description: string;
-        // cart: string;
-        sessionId: string;
-        orderedBy: string;
-        tableSectionId: string;
-        tableNumber: string;
-        restaurantId: string;
-        dishId: string;
-        orderId: string;
-      }[] = temp;
+      const cartContainer: CartItemRedisReturn[] = temp;
 
       const createdAt = Date.now();
       const kotId = constants.workerTokenGenerator(16);
 
-      const kotNoPromise = redisClient.INCR(`${payload.restaurantId}:kotCount`);
-      const dateTime = DateTime.now().endOf("day").toUnixInteger();
+      await redisClient.INCR(`${payload.restaurantId}:kotCount`);
+      // const dateTime = DateTime.now().endOf("day").toUnixInteger();
+      // const dateTime = DateTime.now().toUnixInteger();
 
-      const [kotNo, setKotCountExpire] = await Promise.all([
-        kotNoPromise,
-        redisClient.EXPIREAT(
-          `${payload.restaurantId}:kotCount`,
-          dateTime,
-          "NX",
-        ),
-      ]);
+      // const [kotNo] = await Promise.all([
+      // kotNoPromise,
+      // redisClient.expire(`${payload.restaurantId}:kotCount`, 1000),
+      // redisClient.expireAt(
+      //   `${payload.restaurantId}:kotCount`,
+      //   dateTime,
+      //   "NX",
+      // ),
+      // ]);
 
-      const createOrderFromCartPromise = redis_create_Functions.createOrder({
-        createdAt,
-        kotId,
-        orderedBy: cartContainer[0].orderedBy,
-        restaurantId: cartContainer[0].restaurantId,
-        sessionId: cartContainer[0].sessionId,
-        tableNumber,
-        tableSectionId,
-        chefAssign: "",
-        kotNo,
-        printCount: 0,
-        orders: cartContainer.map((cartItem) => ({
-          ...cartItem,
+      // const createOrderFromCartPromise = redis_create_Functions.createOrder({
+      //   createdAt,
+      //   kotId,
+      //   orderedBy: cartContainer[0].orderedBy,
+      //   restaurantId: cartContainer[0].restaurantId,
+      //   sessionId: cartContainer[0].sessionId,
+      //   tableNumber,
+      //   tableSectionId,
+      //   chefAssign: "",
+      //   printCount: 0,
+      //   orders: cartContainer.map((cartItem) => ({
+      //     ...cartItem,
+      //     createdAt,
+      //     chefAssign: "",
+      //     kotId,
+      //     completed: 0,
+      //     fullQuantity: parseInt(cartItem.fullQuantity),
+      //     halfQuantity: parseInt(cartItem.halfQuantity),
+      //     tableNumber: parseInt(cartItem.tableNumber),
+      //   })),
+      // });
+
+      const makeOrderPromiseContainer = cartContainer.map((item) => {
+        const {
           createdAt,
-          chefAssign: "",
+          dishId,
+          fullQuantity,
+          halfQuantity,
+          orderId,
+          orderedBy,
+          restaurantId,
+          sessionId,
+          size,
+          tableNumber,
+          tableSectionId,
+          chefAssign,
+          completed,
+          user_description,
+        } = item;
+
+        return redis_create_Functions.createOrder({
+          createdAt: parseInt(createdAt),
+          dishId,
+          fullQuantity: parseInt(fullQuantity),
+          halfQuantity: parseInt(halfQuantity),
           kotId,
-          completed: 0,
-          fullQuantity: parseInt(cartItem.fullQuantity),
-          halfQuantity: parseInt(cartItem.halfQuantity),
-          tableNumber: parseInt(cartItem.tableNumber),
-        })),
+          orderedBy,
+          orderId,
+          restaurantId,
+          sessionId,
+          size,
+          tableNumber: parseInt(tableNumber),
+          tableSectionId,
+          chefAssign,
+          completed,
+          user_description,
+        });
       });
 
-      const deleteItemsPromise = redisClient.DEL(cartOrder);
+      await Promise.all(makeOrderPromiseContainer);
 
-      await Promise.all([createOrderFromCartPromise, deleteItemsPromise]);
+      await redisClient.DEL(cartOrder);
 
       // return constants.OK;
 
@@ -279,32 +228,43 @@ export class CartService {
 
       // const selectedOrder: Order[] = await Promise.all(selectedOrderPromis);
 
-      mqttPublish.dishOrder({
-        id: `kot:${kotId}`,
-        value: {
-          chefAssign: "",
-          completed: 0,
-          createdAt,
-          kotId,
-          orderedBy: payload?.userId || "self",
-          restaurantId: payload.restaurantId,
-          sessionId: tableSessionId,
-          tableNumber,
-          tableSectionId,
-          kotNo,
-          printCount: 0,
-          orders: cartContainer.map((cartItem) => ({
-            ...cartItem,
+      mqttPublish.dishOrder(
+        cartContainer.map((item) => {
+          const {
             createdAt,
-            chefAssign: "",
+            dishId,
+            fullQuantity,
+            halfQuantity,
+            orderId,
+            orderedBy,
+            restaurantId,
+            sessionId,
+            size,
+            tableNumber,
+            tableSectionId,
+            chefAssign,
+            completed,
+            user_description,
+          } = item;
+          return {
+            createdAt: parseInt(createdAt),
+            dishId,
+            fullQuantity: parseInt(fullQuantity),
+            halfQuantity: parseInt(halfQuantity),
             kotId,
-            completed: 0,
-            fullQuantity: parseInt(cartItem.fullQuantity),
-            halfQuantity: parseInt(cartItem.halfQuantity),
-            tableNumber: parseInt(cartItem.tableNumber),
-          })),
-        },
-      });
+            orderedBy,
+            orderId,
+            restaurantId,
+            sessionId,
+            size,
+            tableNumber: parseInt(tableNumber),
+            tableSectionId,
+            chefAssign,
+            completed,
+            user_description,
+          };
+        }),
+      );
 
       // if (newOrder.length > 0)
       //   await redisClient.RPUSH(
@@ -326,7 +286,7 @@ export class CartService {
 
     let promiseContainer = [];
 
-    for (let x of cartOrder) {
+    for (const x of cartOrder) {
       promiseContainer = [...promiseContainer, redisClient.DEL(x)];
     }
 

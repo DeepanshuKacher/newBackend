@@ -1,27 +1,28 @@
 import { redisClient } from "../../redisClient";
 import { redisConstants, redisKeyExpiry } from "../../constants";
 import { kot, restaurantKotContainerPush } from "./functions";
+import { CartItem, Order } from "../../../../Interfaces";
 
-enum Size {
-  Large = "large",
-  Medium = "medium",
-  Small = "small",
-}
+// enum Size {
+//   Large = "large",
+//   Medium = "medium",
+//   Small = "small",
+// }
 
-export type Order = {
-  dishId: string;
-  orderId: string;
-  tableNumber: string;
-  tableSectionId: string;
-  user_description?: string;
-  orderedBy: string;
-  size: Size;
-  fullQuantity?: string;
-  halfQuantity?: string;
-  chefAssign?: string;
-  completed?: string;
-  createdAt: string;
-};
+// export type Order = {
+//   dishId: string;
+//   orderId: string;
+//   tableNumber: string;
+//   tableSectionId: string;
+//   user_description?: string;
+//   orderedBy: string;
+//   size: Size;
+//   fullQuantity?: string;
+//   halfQuantity?: string;
+//   chefAssign?: string;
+//   completed?: string;
+//   createdAt: string;
+// };
 
 export interface KotCreation {
   kotId: string;
@@ -93,31 +94,57 @@ export const redis_create_Functions = {
         return response;
       }),
 
-  createOrder: (props: KotCreation) => {
-    return redisClient.json.set(`kot:${props.kotId}`, "$", {
-      kotId: props.kotId,
-      tableSectionId: props.tableSectionId,
-      tableNumber: props.tableNumber,
-      restaurantId: props.restaurantId,
-      createdAt: props.createdAt,
-      orderedBy: props.orderedBy,
-      completed: 0,
-      // cart: props.cart,
-      sessionId: props.sessionId,
-      chefAssign: "",
-      orders: props.orders,
-      kotNo: props.kotNo,
-      printCount: props.printCount,
-    });
+  createOrder: (props: Order) => {
+    const {
+      createdAt,
+      dishId,
+      kotId,
+      orderId,
+      orderedBy,
+      restaurantId,
+      sessionId,
+      size,
+      tableNumber,
+      tableSectionId,
+      chefAssign,
+      fullQuantity,
+      halfQuantity,
+      user_description,
+    } = props;
+    return redisClient.hSet(`order:${props.kotId}`, [
+      "dishId",
+      dishId,
+      "createdAt",
+      createdAt,
+      "kotId",
+      kotId,
+      "orderId",
+      orderId,
+      "orderedBy",
+      orderedBy,
+      "restaurantId",
+      restaurantId,
+      "sessionId",
+      sessionId,
+      "size",
+      size,
+      "tableNumber",
+      tableNumber,
+      "tableSectionId",
+      tableSectionId,
+      "chefAssign",
+      chefAssign || "",
+      "fullQuantity",
+      fullQuantity,
+      "halfQuantity",
+      halfQuantity,
+      "user_description",
+      user_description || "",
+    ]);
   },
 
-  createCartOrder: (
-    props: Omit<
-      NewOrderType,
-      "createdAt" | "kotId" | "completed" | "chefAssign"
-    >,
-  ) =>
-    redisClient.HSET("cart:" + props.orderId, [
+  createCartOrder: (props: CartItem) =>
+    redisClient.HSET("cartItem:" + props.orderId, [
       "size",
       props.size,
       "fullQuantity",
@@ -126,8 +153,6 @@ export const redis_create_Functions = {
       props.halfQuantity,
       "user_description",
       props.user_description,
-      // "cart",
-      // props.cart,
       "sessionId",
       props.sessionId,
       "orderedBy",
@@ -143,52 +168,6 @@ export const redis_create_Functions = {
       "orderId",
       props.orderId,
     ]),
-  // createOrder: (props: NewOrderType) => {
-  //   const orderId = constants.workerTokenGenerator(16);
-  //   return redisClient.HSET(`order:${orderId}`, [
-  //     "size",
-  //     props.size,
-  //     "fullQuantity",
-  //     props.fullQuantity,
-  //     "halfQuantity",
-  //     props.halfQuantity,
-  //     "user_description",
-  //     props.user_description,
-  //     "cart",
-  //     props.cart,
-  //     "sessionId",
-  //     props.sessionId,
-  //     "createdAt",
-  //     props.createdAt,
-  //     "orderedBy",
-  //     props.orderedBy,
-  //     "chefAssign",
-  //     props.chefAssign,
-  //     "completed",
-  //     props.completed,
-  //     "tableSectionId",
-  //     props.tableSectionId,
-  //     "tableNumber",
-  //     props.tableNumber,
-  //     "restaurantId",
-  //     props.restaurantId,
-  //     "kotNo",
-  //     props.kotNo,
-  //     "dishId",
-  //     props.dishId,
-  //     "orderNumber",
-  //     props.orderNumber,
-  //     "orderId",
-  //     orderId,
-  //   ]);
-  // },
-  // .then(() =>
-  //   redisClient.EXPIRE(
-  //     redisConstants.orderKey(props.orderId),
-  //     redisKeyExpiry.orderKey,
-  //     "NX",
-  //   ),
-  // ),
 
   tableStatus: (
     restaurantId: string,

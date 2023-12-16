@@ -117,48 +117,70 @@ export class ParcelService {
         restaurantRevenuePromise,
       ]);
 
-      const kotId: any = createKotLog.id;
+      const kotId = createKotLog.id;
       // const temp: `kot:${string}` = kotId;
 
       const createdAt = Date.now();
 
-      mqttPublish.dishOrder({
-        id: kotId,
-        value: {
-          chefAssign: "",
-          completed: 0,
-          createdAt,
-          kotId,
-          orderedBy: payload?.userId || "self",
-          restaurantId: payload.restaurantId,
-          sessionId: "parcel",
-          tableNumber: 0,
-          tableSectionId: "parcel",
-          kotNo: kotNumber,
-          printCount: 0,
-          orders: createParcelDto.kotOrders.map((cartItem) => {
-            const temp: any = cartItem.size;
-            const dishSize: OrderProps["size"] = temp;
-            return {
-              tableSectionId: constants.parcel,
-              sessionId: constants.parcel,
-              createdAt,
-              chefAssign: "",
-              kotId,
-              completed: 0,
-              fullQuantity: cartItem.fullQuantity,
-              halfQuantity: cartItem.halfQuantity,
-              tableNumber: 0,
-              dishId: cartItem.dishId,
-              orderedBy: payload.userId,
-              restaurantId: payload.restaurantId,
-              size: dishSize,
-              user_description: cartItem.user_description,
-              orderId: constants.parcel,
-            };
-          }),
-        },
-      });
+      mqttPublish.dishOrder(
+        createParcelDto.kotOrders.map((item) => {
+          const { dishId, size, fullQuantity, halfQuantity, user_description } =
+            item;
+          return {
+            createdAt,
+            dishId,
+            fullQuantity,
+            halfQuantity,
+            kotId,
+            orderedBy: payload?.userId || "self",
+            orderId: constants.parcel,
+            restaurantId: payload.restaurantId,
+            sessionId: "parcel",
+            tableNumber: 0,
+            tableSectionId: "parcel",
+            chefAssign: "",
+            user_description,
+            size,
+          };
+        }),
+      );
+      // mqttPublish.dishOrder({
+      //   id: kotId,
+      //   value: {
+      //     chefAssign: "",
+      //     completed: 0,
+      //     createdAt,
+      //     kotId,
+      //     orderedBy: payload?.userId || "self",
+      //     restaurantId: payload.restaurantId,
+      //     sessionId: "parcel",
+      //     tableNumber: 0,
+      //     tableSectionId: "parcel",
+      //     kotNo: kotNumber,
+      //     printCount: 0,
+      //     orders: createParcelDto.kotOrders.map((cartItem) => {
+      //       const temp: any = cartItem.size;
+      //       const dishSize: OrderProps["size"] = temp;
+      //       return {
+      //         tableSectionId: constants.parcel,
+      //         sessionId: constants.parcel,
+      //         createdAt,
+      //         chefAssign: "",
+      //         kotId,
+      //         completed: 0,
+      //         fullQuantity: cartItem.fullQuantity,
+      //         halfQuantity: cartItem.halfQuantity,
+      //         tableNumber: 0,
+      //         dishId: cartItem.dishId,
+      //         orderedBy: payload.userId,
+      //         restaurantId: payload.restaurantId,
+      //         size: dishSize,
+      //         user_description: cartItem.user_description,
+      //         orderId: constants.parcel,
+      //       };
+      //     }),
+      //   },
+      // });
 
       return { kotNumber };
     } catch (error) {

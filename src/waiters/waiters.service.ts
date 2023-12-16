@@ -6,10 +6,10 @@ import {
 } from "@nestjs/common";
 import { JwtPayload_restaurantId } from "src/Interfaces";
 import { PrismaService } from "src/prisma/prisma.service";
-import { S3ImagesService } from "src/s3-images/s3-images.service";
-import { constants, privateContstants } from "src/useFullItems";
+// import { S3ImagesService } from "src/s3-images/s3-images.service";
+import { constants } from "src/useFullItems";
 import { CreateWaiterDto } from "./dto/create-waiter.dto";
-import { UpdateWaiterDto } from "./dto/update-waiter.dto";
+// import { UpdateWaiterDto } from "./dto/update-waiter.dto";
 import { redisClient } from "../useFullItems";
 import { AuthService } from "src/auth/auth.service";
 import { UserType } from "src/auth/dto";
@@ -20,7 +20,7 @@ import { GlobalPrismaFunctionsService } from "src/global-prisma-functions/global
 export class WaitersService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly s3Images: S3ImagesService,
+    // private readonly s3Images: S3ImagesService,
     private readonly authService: AuthService,
     private readonly mailService: MailServiceService,
     private readonly prismaGlobalFunction: GlobalPrismaFunctionsService,
@@ -73,21 +73,21 @@ export class WaitersService {
       },
     });
 
-    if (passportImage)
-      /* this is not async no need for await */
-      this.s3Images.createImage(
-        constants.workerPassportPhoto(createWaiterDto.name),
-        payload.restaurantId,
-        passportImage,
-      );
+    // if (passportImage)
+    //   /* this is not async no need for await */
+    //   this.s3Images.createImage(
+    //     constants.workerPassportPhoto(createWaiterDto.name),
+    //     payload.restaurantId,
+    //     passportImage,
+    //   );
 
-    if (idProof)
-      /* this is not async no need for await */
-      this.s3Images.createImage(
-        constants.workerIdentityPhoto(createWaiterDto.name),
-        payload.restaurantId,
-        idProof,
-      );
+    // if (idProof)
+    //   /* this is not async no need for await */
+    //   this.s3Images.createImage(
+    //     constants.workerIdentityPhoto(createWaiterDto.name),
+    //     payload.restaurantId,
+    //     idProof,
+    //   );
 
     const ownerEmail = this.prisma.owner.findUnique({
       where: { id: payload.userId },
@@ -247,7 +247,7 @@ export class WaitersService {
 
   async remove(id: string, payload: JwtPayload_restaurantId) {
     try {
-      this.s3Images.deleteImage(
+      /*       this.s3Images.deleteImage(
         payload.restaurantId,
         constants.workerPassportPhoto(id),
       );
@@ -255,7 +255,7 @@ export class WaitersService {
       this.s3Images.deleteImage(
         payload.restaurantId,
         constants.workerIdentityPhoto(id),
-      );
+      ); */
 
       const changeCommitIdPromis =
         this.prismaGlobalFunction.updateRestaurantCommitUUID(

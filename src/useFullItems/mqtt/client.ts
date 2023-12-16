@@ -4,6 +4,13 @@ import * as mqtt from "mqtt";
 
 const config = new ConfigService();
 
+const getConfigFunction = (str) => {
+  const variable: string | undefined = config.get(str);
+
+  if (variable) return variable;
+  else throw new Error(`No config found ${str}`);
+};
+
 // const client = mqtt.connect({
 //   username: "anku",
 //   password: "ankuWork$100%",
@@ -13,16 +20,14 @@ const config = new ConfigService();
 //   clientId: "nodejs_backend",
 // });
 
-const returnMqttClient = () => {
-  const enviornment = config.get('NODE_ENV')
-
-  if (enviornment === 'DEVELOPMENT') return mqtt.connect({
-    host: config.get('mqtthost_dev'),
-    port: config.get('mqttport')
-  })
-}
-
-const client = returnMqttClient()
+const client = mqtt.connect({
+  hostname: getConfigFunction("mqtthostname"),
+  port: parseInt(getConfigFunction("mqttport")),
+  username: getConfigFunction("mqttUsername"),
+  password: getConfigFunction("mqttPassword"),
+  clientId: getConfigFunction("mqttClientId"),
+  protocol: "tcp",
+});
 
 client.on("connect", function () {
   console.log("mqtt connected");

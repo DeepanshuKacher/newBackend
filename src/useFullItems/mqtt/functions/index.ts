@@ -1,7 +1,5 @@
-import { CreateOrderDto, Size } from "src/orders/dto/create-order.dto";
 import { mqttClient } from "../client";
-import { Order } from "src/useFullItems/redis";
-import { RetreveKotJson } from "src/Interfaces";
+import type { Order } from "../../../Interfaces";
 
 const orderStatusUpdation = {
   Accept: "Accept",
@@ -32,7 +30,7 @@ const mqttMessageFunctions = {
       status,
     }),
 
-  dishOrder: (kot: RetreveKotJson) => formatPayload("dishOrder", kot),
+  dishOrder: (kot: Order[]) => formatPayload("dishOrder", kot),
 
   acceptOrder: (orderId: string, chefId: string) =>
     formatPayload("updateOrder", {
@@ -95,12 +93,12 @@ const mqttMessageWithTopic = {
       },
     ),
 
-  dishOrder: (kot: RetreveKotJson) =>
+  dishOrder: (kot: Order[]) =>
     mqttClient.publish(
       mqttTopicFunctions.orderBroadCast(
-        kot.value.restaurantId,
-        kot.value.tableSectionId,
-        kot.value.tableNumber,
+        kot[0].restaurantId,
+        kot[0].tableSectionId,
+        kot[0].tableNumber,
       ),
       mqttMessageFunctions.dishOrder(kot),
     ),
@@ -154,15 +152,15 @@ const mqttMessageWithTopic = {
     );
   },
 
-  cardDishOrder: (props: CardDishOrderProps) =>
-    mqttClient.publish(
-      mqttTopicFunctions.orderBroadCast(
-        props.restaurantId,
-        props.tableSectionId,
-        props.tableNumber,
-      ),
-      mqttMessageFunctions.cardDishOrder(props.orderArray, props.orderNo),
-    ),
+  // cardDishOrder: (props: CardDishOrderProps) =>
+  //   mqttClient.publish(
+  //     mqttTopicFunctions.orderBroadCast(
+  //       props.restaurantId,
+  //       props.tableSectionId,
+  //       props.tableNumber,
+  //     ),
+  //     mqttMessageFunctions.cardDishOrder(props.orderArray, props.orderNo),
+  //   ),
 
   generateBillNotification: (
     restaurantId: string,
@@ -181,23 +179,23 @@ const mqttMessageWithTopic = {
 
 export { mqttMessageWithTopic as mqttPublish };
 
-interface CardDishOrderProps {
-  restaurantId: string;
-  tableSectionId: string;
-  tableNumber: number;
-  orderNo: number;
-  orderArray: {
-    dishId: string;
-    orderId: string;
-    tableNumber: string;
-    tableSectionId: string;
-    user_description?: string;
-    orderedBy: string;
-    size: Size;
-    fullQuantity?: string;
-    halfQuantity?: string;
-    chefAssign?: string;
-    completed?: string;
-    createdAt: string;
-  }[];
-}
+// interface CardDishOrderProps {
+//   restaurantId: string;
+//   tableSectionId: string;
+//   tableNumber: number;
+//   orderNo: number;
+//   orderArray: {
+//     dishId: string;
+//     orderId: string;
+//     tableNumber: string;
+//     tableSectionId: string;
+//     user_description?: string;
+//     orderedBy: string;
+//     size: Size;
+//     fullQuantity?: string;
+//     halfQuantity?: string;
+//     chefAssign?: string;
+//     completed?: string;
+//     createdAt: string;
+//   }[];
+// }

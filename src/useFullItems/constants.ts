@@ -60,11 +60,11 @@ export const constants = {
     }/${privateContstants.objectKey(restaurantId, name)}`,
 
   workerTokenGenerator: (length?: number) => {
-    let chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-      passwordLength = length || 9,
-      password = "";
-    for (var i = 0; i <= passwordLength; i++) {
-      var randomNumber = Math.floor(Math.random() * chars.length);
+    const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      passwordLength = length || 9;
+    let password = "";
+    for (let i = 0; i <= passwordLength; i++) {
+      const randomNumber = Math.floor(Math.random() * chars.length);
       password += chars.substring(randomNumber, randomNumber + 1);
     }
     return password;
@@ -93,7 +93,7 @@ export const privateContstants = {
 export const functionsObject = {
   arrayToObject: <T>(itemArray: any[]): { [key: string]: T } => {
     const tempObj = {};
-    for (let x of itemArray) {
+    for (const x of itemArray) {
       if (x) {
         tempObj[x] = x;
       }

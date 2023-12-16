@@ -5,7 +5,7 @@ import { constants } from "src/useFullItems";
 import { PrismaService } from "src/prisma/prisma.service";
 import { JwtPayload_restaurantId } from "src/Interfaces";
 import { DeleteDishDto } from "./dto";
-import { S3ImagesService } from "src/s3-images/s3-images.service";
+// import { S3ImagesService } from "src/s3-images/s3-images.service";
 import { Dish } from "@prisma/client";
 import { GlobalPrismaFunctionsService } from "src/global-prisma-functions/global-prisma-functions.service";
 
@@ -13,7 +13,7 @@ import { GlobalPrismaFunctionsService } from "src/global-prisma-functions/global
 export class DishesService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly s3Images: S3ImagesService,
+    // private readonly s3Images: S3ImagesService,
     private readonly globalPrismaFunctions: GlobalPrismaFunctionsService,
   ) {}
 
@@ -23,7 +23,7 @@ export class DishesService {
     });
   }
 
-  async create_bulkDish_withoutImage() {}
+  // async create_bulkDish_withoutImage() {}
 
   async createDish(dto: CreateDishDto, restaurantId: string, image?: string) {
     const returnDishValue = (fullPrice: number, halfPrice: number) => {
@@ -68,7 +68,7 @@ export class DishesService {
     try {
       const imageUrl = constants.objectURL(payload.restaurantId, body.name);
 
-      this.s3Images.createImage(body.name, payload.restaurantId, file);
+      // this.s3Images.createImage(body.name, payload.restaurantId, file);
       const uploadDish = await this.createDish(
         body,
         payload.restaurantId,
@@ -133,17 +133,17 @@ export class DishesService {
   ) {
     try {
       const deleteDish = this.prisma.dish.delete({ where: { id } });
-      const deleteImage = this.s3Images.deleteImage(
-        payload.restaurantId,
-        body.name,
-      );
+      // const deleteImage = this.s3Images.deleteImage(
+      //   payload.restaurantId,
+      //   body.name,
+      // );
 
       const updateCommitIdPromis =
         this.globalPrismaFunctions.updateRestaurantCommitUUID(
           payload.restaurantId,
         );
 
-      await Promise.all([deleteDish, deleteImage, updateCommitIdPromis]);
+      await Promise.all([deleteDish, updateCommitIdPromis]);
 
       return constants.OK;
     } catch (error) {

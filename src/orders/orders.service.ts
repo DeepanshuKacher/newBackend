@@ -5,17 +5,16 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from "@nestjs/common";
-import { JwtPayload_restaurantId, RetreveKotJson } from "src/Interfaces";
+import { JwtPayload_restaurantId } from "src/Interfaces";
 import {
   KotCreation,
   constants,
   mqttPublish,
-  orderConstants,
+  // orderConstants,
   redisClient,
   redisConstants,
   redisGetFunction,
   redis_create_Functions,
-  redis_update_functions,
 } from "src/useFullItems";
 import { CreateOrderDto, KotId } from "./dto/create-order.dto";
 import { UpdateOrderStatusDto } from "./dto/update-orderStatus.dto";
@@ -60,15 +59,14 @@ export class OrdersService {
     const createdAt = Date.now();
 
     const kotNoPromise = redisClient.INCR(`${payload.restaurantId}:kotCount`);
-    const dateTime = DateTime.now().endOf("day").toUnixInteger();
+    // const dateTime = DateTime.now().endOf("day").toUnixInteger();
 
-    const [kotNo, setKotCountExpire] = await Promise.all([
+    const [kotNo] = await Promise.all([
       kotNoPromise,
-      redisClient.EXPIREAT(`${payload.restaurantId}:kotCount`, dateTime, "NX"),
+      // redisClient.EXPIREAT(`${payload.restaurantId}:kotCount`, dateTime, "NX"),
     ]);
 
     await redis_create_Functions.createOrder({
-      // cart: 0,
       createdAt,
       kotId,
       orderedBy: payload?.userId || "self",
@@ -76,28 +74,13 @@ export class OrdersService {
       sessionId,
       tableNumber,
       tableSectionId,
-      kotNo,
-      printCount: 0,
-      orders: [
-        {
-          // cart: 0,
-          completed: 0,
-          createdAt,
-          dishId,
-          fullQuantity: fullQuantity || 0,
-          halfQuantity: halfQuantity || 0,
-          kotId,
-          orderedBy: payload?.userId || "self",
-          orderId: constants.workerTokenGenerator(16),
-          restaurantId: payload.restaurantId,
-          size,
-          tableNumber,
-          tableSectionId,
-          user_description,
-          sessionId,
-          chefAssign: "",
-        },
-      ],
+      dishId,
+      fullQuantity: fullQuantity || 0,
+      halfQuantity: halfQuantity || 0,
+      orderId: constants.workerTokenGenerator(16),
+      size,
+      user_description,
+      chefAssign: "",
     });
 
     // const pushOrderToTableSessionPromis = redis_create_Functions.tableSession(
@@ -134,11 +117,8 @@ export class OrdersService {
       //   pushKotToRestaurantContainerPromise,
       // ]);
 
-      mqttPublish.dishOrder({
-        id: `kot:${kotId}`,
-        value: {
-          chefAssign: "",
-          completed: 0,
+      mqttPublish.dishOrder([
+        {
           createdAt,
           kotId,
           orderedBy: payload?.userId || "self",
@@ -146,30 +126,15 @@ export class OrdersService {
           sessionId,
           tableNumber,
           tableSectionId,
-          kotNo,
-          printCount: 0,
-          orders: [
-            {
-              // cart: 0,
-              completed: 0,
-              createdAt,
-              dishId,
-              fullQuantity: fullQuantity || 0,
-              halfQuantity: halfQuantity || 0,
-              kotId,
-              orderedBy: payload?.userId || "self",
-              orderId: constants.workerTokenGenerator(16),
-              restaurantId: payload.restaurantId,
-              size,
-              tableNumber,
-              tableSectionId,
-              user_description,
-              sessionId,
-              chefAssign: "",
-            },
-          ],
+          dishId,
+          fullQuantity: fullQuantity || 0,
+          halfQuantity: halfQuantity || 0,
+          orderId: constants.workerTokenGenerator(16),
+          size,
+          user_description,
+          chefAssign: "",
         },
-      });
+      ]);
 
       return constants.OK;
     } catch (error) {

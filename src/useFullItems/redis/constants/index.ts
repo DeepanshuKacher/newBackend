@@ -1,5 +1,5 @@
 import { CronJob } from "cron";
-import { Order } from "../functions";
+// import { Order } from "../functions";
 import { DateTime } from "luxon";
 import { constants } from "src/useFullItems/constants";
 
@@ -63,7 +63,7 @@ export const redisConstants = {
   kot_key: (kotUUID: string) => `${kotUUID}:kot`,
 
   restaurantOrderIndex: "restaurantOrder",
-  restaurantCartIndex: "restaurantCart",
+  restaurantCartIndex: "restaurantCartItem",
 };
 
 export const redisKeyExpiry = {
@@ -73,17 +73,17 @@ export const redisKeyExpiry = {
   // cartSession: 60 * 60 * 24,finish them imitiately after session is finish
 };
 
-export const orderConstants: Omit<Order, "size"> & { size: string } = {
-  dishId: "dishId",
-  orderId: "orderId",
-  tableNumber: "tableNumber",
-  tableSectionId: "tableSectionId",
-  user_description: "user_description",
-  orderedBy: "orderedBy",
-  size: "size",
-  fullQuantity: "fullQuantity",
-  halfQuantity: "halfQuantity",
-  chefAssign: "chefAssign",
-  completed: "completed",
-  createdAt: "createdAt",
-};
+// export const orderConstants: Omit<Order, "size"> & { size: string } = {
+//   dishId: "dishId",
+//   orderId: "orderId",
+//   tableNumber: "tableNumber",
+//   tableSectionId: "tableSectionId",
+//   user_description: "user_description",
+//   orderedBy: "orderedBy",
+//   size: "size",
+//   fullQuantity: "fullQuantity",
+//   halfQuantity: "halfQuantity",
+//   chefAssign: "chefAssign",
+//   completed: "completed",
+//   createdAt: "createdAt",
+// };

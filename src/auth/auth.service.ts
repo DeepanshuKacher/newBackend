@@ -3,10 +3,6 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  HttpException,
-  UnauthorizedException,
-  ConflictException,
-  NotAcceptableException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import * as argon from "argon2";
@@ -32,7 +28,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly prisma: PrismaService,
     private readonly mailService: MailServiceService,
-  ) { }
+  ) {}
 
   async verifyemail(email: EmailDto) {
     try {
@@ -47,7 +43,7 @@ export class AuthService {
         EX: 300,
       });
 
-      console.log('whats going on');
+      console.log("whats going on");
 
       await Promise.all([response, redisOTP]);
 
@@ -59,8 +55,8 @@ export class AuthService {
 
   async create(createOwnerDto: CreateOwnerDto) {
     try {
-      if (constants.IS_DEVELOPMENT) console.log('active')
-      let otp = await redisClient.GET(constants.OTP + createOwnerDto.email);
+      if (constants.IS_DEVELOPMENT) console.log("active");
+      const otp = await redisClient.GET(constants.OTP + createOwnerDto.email);
 
       if (!otp || otp !== createOwnerDto.otp)
         throw new ForbiddenException("Invalid OTP");
@@ -69,7 +65,7 @@ export class AuthService {
 
       const hash = await argon.hash(createOwnerDto.password);
 
-      const owner = await this.prisma.owner.create({
+      await this.prisma.owner.create({
         data: {
           email: createOwnerDto.email,
           firstName: createOwnerDto.firstName,
@@ -148,7 +144,6 @@ export class AuthService {
     const sessionId = request.signedCookies[constants.sessionId];
     const userType: UserType = request.signedCookies[constants.userType];
 
-
     if (!sessionId) throw new ForbiddenException();
 
     // if (constants.IS_PRODUCTION) {
@@ -178,6 +173,8 @@ export class AuthService {
       if (!restaurantAndManagerDetail) throw new ForbiddenException();
       if (sessionId !== restaurantAndManagerDetail.manager[0].id)
         throw new ForbiddenException();
+
+      if (constants.IS_DEVELOPMENT) console.log("work untill here");
 
       return this.jwt_token_with_restaurantId({
         userId: restaurantAndManagerDetail.manager[0].id,

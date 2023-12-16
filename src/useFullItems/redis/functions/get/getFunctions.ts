@@ -1,12 +1,12 @@
-import { AggregateGroupByReducers, AggregateSteps } from "redis";
 import { redisGetFunction } from ".";
-import { Order, orderConstants, redisConstants } from "../..";
+import { redisConstants } from "../..";
 import { redisClient } from "../../redisClient";
 // import { OrderProps } from "../create";
+import { OrderReturnFromRedis } from "../../../../Interfaces";
 
 export const getOrdersObjectFromSessionUUID = async (
   sessionUUID: string,
-): Promise<Order[]> => {
+): Promise<OrderReturnFromRedis[]> => {
   const orderKeysArray = await redisGetFunction.orderKeysArrayFromSessionUUID(
     sessionUUID,
   );
