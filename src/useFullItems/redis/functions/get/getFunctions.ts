@@ -2,7 +2,7 @@ import { redisGetFunction } from ".";
 import { redisConstants } from "../..";
 import { redisClient } from "../../redisClient";
 // import { OrderProps } from "../create";
-import { OrderReturnFromRedis } from "../../../../Interfaces";
+import { OrderReturnFromRedis, RetreveCartItemFromRedisIndex, RetreveKotJson } from "../../../../Interfaces";
 
 export const getOrdersObjectFromSessionUUID = async (
   sessionUUID: string,
@@ -85,3 +85,32 @@ export const ordersKeyFromKotContainer = async (
 
   return await Promise.all(promisContainer); // sending order key array
 };
+
+
+
+
+
+
+export const getCartItemsFromSessionId = (sessionId: string): Promise<{
+  total: number;
+  documents: RetreveCartItemFromRedisIndex[];
+}> => {
+  const temp: any = redisClient.ft.search(
+    redisConstants.restaurantCartIndex,
+    `@sessionId:{${sessionId}}`
+  )
+
+  return temp
+}
+
+export const getOrdersFromSessionId = (sessionId: string): Promise<{
+  total: number;
+  documents: RetreveKotJson[];
+}> => {
+  const temp: any = redisClient.ft.search(
+    redisConstants.restaurantOrderIndex,
+    `@sessionId:{${sessionId}}`
+  )
+
+  return temp
+}

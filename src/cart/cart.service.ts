@@ -77,7 +77,7 @@ export class CartService {
         tableNumber,
         tableSectionId,
         user_description,
-        createdAt: Date.now(),
+        // createdAt: Date.now(),
       });
 
       return constants.OK;
@@ -179,7 +179,6 @@ export class CartService {
 
       const makeOrderPromiseContainer = cartContainer.map((item) => {
         const {
-          createdAt,
           dishId,
           fullQuantity,
           halfQuantity,
@@ -196,7 +195,7 @@ export class CartService {
         } = item;
 
         return redis_create_Functions.createOrder({
-          createdAt: parseInt(createdAt),
+          createdAt: createdAt,
           dishId,
           fullQuantity: parseInt(fullQuantity),
           halfQuantity: parseInt(halfQuantity),
@@ -231,7 +230,7 @@ export class CartService {
       mqttPublish.dishOrder(
         cartContainer.map((item) => {
           const {
-            createdAt,
+            // createdAt,
             dishId,
             fullQuantity,
             halfQuantity,
@@ -247,7 +246,7 @@ export class CartService {
             user_description,
           } = item;
           return {
-            createdAt: parseInt(createdAt),
+            createdAt: createdAt,
             dishId,
             fullQuantity: parseInt(fullQuantity),
             halfQuantity: parseInt(halfQuantity),

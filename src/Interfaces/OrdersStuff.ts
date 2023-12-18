@@ -16,8 +16,8 @@ interface CartItem {
   halfQuantity: number;
   chefAssign?: string;
   completed?: string;
-  createdAt: number;
   sessionId: string;
+  // createdAt: number;
   restaurantId: string;
 }
 
@@ -33,17 +33,31 @@ interface CartItemRedisReturn {
   halfQuantity: string;
   chefAssign?: string;
   completed?: string;
-  createdAt: string;
+  // createdAt: string;
   sessionId: string;
   restaurantId: string;
 }
 
 interface Order extends CartItem {
   kotId: string;
+  createdAt: number;
+
 }
 
 interface OrderReturnFromRedis extends CartItemRedisReturn {
   kotId: string;
+  createdAt: string;
 }
 
-export { Order, CartItem, CartItemRedisReturn, OrderReturnFromRedis };
+
+interface RetreveKotJson {
+  id: string;
+  value: OrderReturnFromRedis
+}
+
+interface RetreveCartItemFromRedisIndex {
+  id: string;
+  value: CartItemRedisReturn
+}
+
+export { Order, CartItem, CartItemRedisReturn, OrderReturnFromRedis, RetreveKotJson, RetreveCartItemFromRedisIndex };

@@ -292,7 +292,7 @@ export class OrdersService {
     return constants.OK;
   }
 
-  getOrder_logs(payload: JwtPayload_restaurantId) {
+/*   getOrder_logs(payload: JwtPayload_restaurantId) {
     switch (payload.userType) {
       case "Waiter":
         return this.prisma.kotLog.findMany({
@@ -343,7 +343,7 @@ export class OrdersService {
           },
         });
     }
-  }
+  } */
 
   async deleteOrder(dto: DeleteOrderDto) {
     const { orderId, kotId } = dto;

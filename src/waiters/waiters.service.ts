@@ -279,7 +279,7 @@ export class WaitersService {
     }
   }
 
-  getLogs(payload: JwtPayload_restaurantId) {
+/*   getLogs(payload: JwtPayload_restaurantId) {
     return this.prisma.waiter.findUnique({
       where: {
         id: payload.userId,
@@ -288,5 +288,5 @@ export class WaitersService {
         KotLog: true,
       },
     });
-  }
+  } */
 }

@@ -5,7 +5,7 @@ import { DishAnalysisDto } from "./dto/getDishInfo.dto";
 
 @Injectable()
 export class DishService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async getDishData(data: DishAnalysisDto, payload: JwtPayload_restaurantId) {
     const { endDate, startDate, dishesId } = data;
@@ -14,28 +14,7 @@ export class DishService {
     if (!(userType === "Owner" || userType === "Manager"))
       throw new UnauthorizedException();
 
-    return this.prisma.dishData.groupBy({
-      by: ["dateOfOrder", "dishId"],
-      where: {
-        restaurantId: payload.restaurantId,
-        dishId: {
-          in: dishesId,
-        },
-        dateOfOrder: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-      _count: {
-        id: true,
-      },
-      orderBy: {
-        dateOfOrder: "asc",
-      },
-      _sum: {
-        cost: true,
-      },
-    });
+    return 'hji'
     //   const dishesh = [
     //       "64086dc53a098ad9ddae8769",
     //       "640871cd3a098ad9ddae876a",

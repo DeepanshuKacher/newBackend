@@ -1,6 +1,8 @@
 import { redisConstants } from "../../constants";
 import { redisClient } from "../../redisClient";
 import {
+  getCartItemsFromSessionId,
+  getOrdersFromSessionId,
   getOrdersObjectFromSessionUUID,
   getTableInfoFromSessionUUID,
   kotContainerItemsKey_Today,
@@ -46,4 +48,9 @@ export const redisGetFunction = {
   kotContainerItemsKey_Today,
 
   kotContainerItemsKey_YesterDay,
+
+  getCartItemsFromSessionId,
+
+  getOrdersFromSessionId
+
 };

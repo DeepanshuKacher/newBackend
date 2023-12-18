@@ -14,7 +14,7 @@ import {
 
 @Injectable()
 export class ParcelService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
   async create(
     createParcelDto: CreateParcelDto,
     payload: JwtPayload_restaurantId,
@@ -28,22 +28,22 @@ export class ParcelService {
       },
     });
 
-    const createKotLogPromise = this.prisma.kotLog.create({
-      data: {
-        parcel: true,
-        orderedBy: "manager",
-        waiterId: payload.userId,
-        createdAt: DateTime.now().setZone(constants.IndiaTimeZone).toISO(),
-        restaurantId: payload.restaurantId,
-      },
-      select: {
-        id: true,
-      },
-    });
+    // const createKotLogPromise = this.prisma.kotLog.create({
+    //   data: {
+    //     parcel: true,
+    //     orderedBy: "manager",
+    //     waiterId: payload.userId,
+    //     createdAt: DateTime.now().setZone(constants.IndiaTimeZone).toISO(),
+    //     restaurantId: payload.restaurantId,
+    //   },
+    //   select: {
+    //     id: true,
+    //   },
+    // });
 
-    const [disheshInfo, createKotLog] = await Promise.all([
+    const [disheshInfo, /* createKotLog */] = await Promise.all([
       disheshInfoPromise,
-      createKotLogPromise,
+      // createKotLogPromise,
     ]);
 
     const getOrderPrice_impure = (order: {
@@ -70,31 +70,31 @@ export class ParcelService {
 
     const storeDishDataPromise = this.prisma.dishData.createMany({
       data: createParcelDto.kotOrders.map((order) => ({
+
         dishId: order.dishId,
-        DishSize: order.size,
-        cost: getOrderPrice_impure(order),
         fullQuantity: order.fullQuantity,
         halfQuantity: order.halfQuantity,
         dateOfOrder: DateTime.now().setZone(constants.IndiaTimeZone).toISO(),
         restaurantId: payload.restaurantId,
+        dishSize: order.size,
       })),
     });
 
-    const storeOrderPromise = this.prisma.kotOrder.createMany({
-      data: createParcelDto.kotOrders.map((order) => ({
-        dateTime: DateTime.now().setZone(constants.IndiaTimeZone).toISO(),
-        dishId: order.dishId,
-        kotLogId: createKotLog.id,
-        size: order.size,
-        cost: getOrderPrice_impure(order),
-        fullQuantity: order.fullQuantity,
-        halfQuantity: order.halfQuantity,
-        restaurantId: payload.restaurantId,
-        user_description: order.user_description,
-        orderBy: "manager",
-        waiterId: payload.userId,
-      })),
-    });
+    // const storeOrderPromise = this.prisma.kotOrder.createMany({
+    //   data: createParcelDto.kotOrders.map((order) => ({
+    //     dateTime: DateTime.now().setZone(constants.IndiaTimeZone).toISO(),
+    //     dishId: order.dishId,
+    //     kotLogId: createKotLog.id,
+    //     size: order.size,
+    //     cost: getOrderPrice_impure(order),
+    //     fullQuantity: order.fullQuantity,
+    //     halfQuantity: order.halfQuantity,
+    //     restaurantId: payload.restaurantId,
+    //     user_description: order.user_description,
+    //     orderBy: "manager",
+    //     waiterId: payload.userId,
+    //   })),
+    // });
 
     const restaurantRevenuePromise = this.prisma.restaurantRevenue.create({
       data: {
@@ -113,11 +113,11 @@ export class ParcelService {
       const [kotNumber] = await Promise.all([
         kotNoPromise,
         storeDishDataPromise,
-        storeOrderPromise,
+        // storeOrderPromise,
         restaurantRevenuePromise,
       ]);
 
-      const kotId = createKotLog.id;
+      const kotId = constants.workerTokenGenerator(16)
       // const temp: `kot:${string}` = kotId;
 
       const createdAt = Date.now();

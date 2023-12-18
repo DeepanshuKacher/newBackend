@@ -25,10 +25,10 @@ export class WaitersController {
     return this.waitersService.getRestaurantDetail_For_Waiter(payload.userId);
   }
 
-  @Get("logs")
+/*   @Get("logs")
   getLogs(@GetJwtPayload() payload: JwtPayload_restaurantId) {
     return this.waitersService.getLogs(payload);
-  }
+  } */
 
   @Post()
   @UseInterceptors(
