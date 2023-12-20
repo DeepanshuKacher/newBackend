@@ -17,17 +17,17 @@ import { UpdateOrderDto } from "./dto/update-order.dto";
 
 @Controller("orders")
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(private readonly ordersService: OrdersService) { }
 
   @Get()
   findAll(@GetJwtPayload() payload: JwtPayload_restaurantId) {
     return this.ordersService.findAll(payload);
   }
 
-/*   @Get("logs")
-  getOrderLogs(@GetJwtPayload() payload: JwtPayload_restaurantId) {
-    return this.ordersService.getOrder_logs(payload);
-  } */
+  /*   @Get("logs")
+    getOrderLogs(@GetJwtPayload() payload: JwtPayload_restaurantId) {
+      return this.ordersService.getOrder_logs(payload);
+    } */
 
   @Post()
   create(
@@ -47,7 +47,7 @@ export class OrdersController {
 
   @Patch("incrementPrintCount")
   incrementPrintCount(@Body() kotId: KotId) {
-    return this.ordersService.incrementPrintCount(kotId);
+    return this.ordersService.printCountIncrement(kotId.kotId);
   }
 
   @Patch("reject")

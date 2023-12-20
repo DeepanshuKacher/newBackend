@@ -141,41 +141,7 @@ export class CartService {
       const createdAt = Date.now();
       const kotId = constants.workerTokenGenerator(16);
 
-      await redisClient.INCR(`${payload.restaurantId}:kotCount`);
-      // const dateTime = DateTime.now().endOf("day").toUnixInteger();
-      // const dateTime = DateTime.now().toUnixInteger();
-
-      // const [kotNo] = await Promise.all([
-      // kotNoPromise,
-      // redisClient.expire(`${payload.restaurantId}:kotCount`, 1000),
-      // redisClient.expireAt(
-      //   `${payload.restaurantId}:kotCount`,
-      //   dateTime,
-      //   "NX",
-      // ),
-      // ]);
-
-      // const createOrderFromCartPromise = redis_create_Functions.createOrder({
-      //   createdAt,
-      //   kotId,
-      //   orderedBy: cartContainer[0].orderedBy,
-      //   restaurantId: cartContainer[0].restaurantId,
-      //   sessionId: cartContainer[0].sessionId,
-      //   tableNumber,
-      //   tableSectionId,
-      //   chefAssign: "",
-      //   printCount: 0,
-      //   orders: cartContainer.map((cartItem) => ({
-      //     ...cartItem,
-      //     createdAt,
-      //     chefAssign: "",
-      //     kotId,
-      //     completed: 0,
-      //     fullQuantity: parseInt(cartItem.fullQuantity),
-      //     halfQuantity: parseInt(cartItem.halfQuantity),
-      //     tableNumber: parseInt(cartItem.tableNumber),
-      //   })),
-      // });
+      const kotCount = await redisClient.INCR(`${payload.restaurantId}:kotCount`);
 
       const makeOrderPromiseContainer = cartContainer.map((item) => {
         const {
@@ -210,6 +176,8 @@ export class CartService {
           chefAssign,
           completed,
           user_description,
+          kotCount,
+          printCount: 1,
         });
       });
 
@@ -261,6 +229,8 @@ export class CartService {
             chefAssign,
             completed,
             user_description,
+            kotCount,
+            printCount: 1,
           };
         }),
       );

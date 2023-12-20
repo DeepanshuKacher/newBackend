@@ -110,6 +110,7 @@ export const redis_create_Functions = {
       fullQuantity,
       halfQuantity,
       user_description,
+      printCount, kotCount
     } = props;
     return redisClient.hSet(`order:${props.orderId}`, [
       "dishId",
@@ -140,6 +141,10 @@ export const redis_create_Functions = {
       halfQuantity,
       "user_description",
       user_description || "",
+      "kotNumber",
+      kotCount,
+      "printCount",
+      printCount
     ]);
   },
 

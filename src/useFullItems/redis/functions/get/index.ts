@@ -1,3 +1,4 @@
+import { OrderReturnFromRedis } from "src/Interfaces";
 import { redisConstants } from "../../constants";
 import { redisClient } from "../../redisClient";
 import {
@@ -12,8 +13,10 @@ import {
 } from "./getFunctions";
 
 export const redisGetFunction = {
-  getOrder: (orderUUID: string) =>
-    redisClient.HGETALL(redisConstants.orderKey(orderUUID)),
+  getOrder: (orderId: string): Promise<OrderReturnFromRedis | undefined> => {
+    const temp: any = redisClient.HGETALL(redisConstants.orderKey(orderId));
+    return temp
+  },
 
   restaurantTableStatus: (restaurantId: string) =>
     redisClient.HGETALL(redisConstants.tablesStatusKey(restaurantId)),

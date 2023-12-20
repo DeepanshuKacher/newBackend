@@ -3,10 +3,11 @@ import { SessionsService } from "./sessions.service";
 import { CreateSessionDto } from "./dto/create-session.dto";
 import { GetJwtPayload } from "src/decorators";
 import { JwtPayload_restaurantId } from "src/Interfaces";
+import { DeleteSessionDto } from "./dto/delete-session.dto";
 
 @Controller("sessions")
 export class SessionsController {
-  constructor(private readonly sessionsService: SessionsService) {}
+  constructor(private readonly sessionsService: SessionsService) { }
 
   @Get("log")
   sessionHistory(@GetJwtPayload() payload: JwtPayload_restaurantId) {
@@ -45,9 +46,9 @@ export class SessionsController {
   @Delete(":sessionId")
   clearSession(
     @Param("sessionId") id: string,
-    @Body() createSessionDto: CreateSessionDto,
+    @Body() deleteSessionDto: DeleteSessionDto,
     @GetJwtPayload() payload: JwtPayload_restaurantId,
   ) {
-    return this.sessionsService.clearSession(createSessionDto, payload, id);
+    return this.sessionsService.clearSession(deleteSessionDto, payload, id);
   }
 }

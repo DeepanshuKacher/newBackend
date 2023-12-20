@@ -26,17 +26,21 @@ export class UpdateOrderDto {
   @IsNotEmpty()
   orderId: string;
 
-  @IsString()
-  @IsNotEmpty()
-  kotId: string;
+  // @IsString()
+  // @IsNotEmpty()
+  // kotId: string;
 
-  @IsEnum(HalfFull)
-  @IsNotEmpty()
-  halfFull: HalfFull;
+  // @IsEnum(HalfFull)
+  // @IsNotEmpty()
+  // halfFull: HalfFull;
 
   @IsInt()
   @IsNotEmpty()
-  newQuantity: number;
+  newFullQuantity: number;
+
+  @IsInt()
+  @IsNotEmpty()
+  newHalfQuantity: number;
 
   // @IsInt()
   // // @IsPositive()

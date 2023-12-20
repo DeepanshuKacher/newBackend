@@ -42,7 +42,7 @@ export const redisConstants = {
     tableNumber: number,
   ) => `${tableSectionId}:${tableNumber}:tableSession`,
 
-  orderKey: (orderUUID: string) => `${orderUUID}:order`,
+  orderKey: (orderId: string) => `order:${orderId}`,
 
   sessionKey: (sessionUUID: string) => `${sessionUUID}:session`,
 

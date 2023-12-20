@@ -1,11 +1,11 @@
-import { IsDateString, IsNotEmpty } from "class-validator";
+import { IsInt, IsNotEmpty } from "class-validator";
 
 export class RevenueDto {
   @IsNotEmpty()
-  @IsDateString()
-  startDate: string;
+  @IsInt()
+  startDateTime: number;
 
   @IsNotEmpty()
-  @IsDateString()
-  endDate: string;
+  @IsInt()
+  endDateTime: number;
 }

@@ -41,12 +41,17 @@ interface CartItemRedisReturn {
 interface Order extends CartItem {
   kotId: string;
   createdAt: number;
+  kotCount: number;
+  printCount: number;
 
 }
 
 interface OrderReturnFromRedis extends CartItemRedisReturn {
   kotId: string;
   createdAt: string;
+  kotCount: string;
+  printCount: string;
+
 }
 
 

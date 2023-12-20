@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from "@nestjs/common";
-import { JwtPayload_restaurantId } from "src/Interfaces";
+import { JwtPayload_restaurantId, Order } from "src/Interfaces";
 import {
   KotCreation,
   constants,
@@ -19,13 +19,12 @@ import {
 import { CreateOrderDto, KotId } from "./dto/create-order.dto";
 import { UpdateOrderStatusDto } from "./dto/update-orderStatus.dto";
 import { PrismaService } from "src/prisma/prisma.service";
-import { DateTime } from "luxon";
 import { DeleteOrderDto } from "./dto/delete-order.dto";
 import { UpdateOrderDto } from "./dto/update-order.dto";
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(
     createOrderDto: CreateOrderDto,
@@ -58,64 +57,30 @@ export class OrdersService {
     const kotId = constants.workerTokenGenerator(16);
     const createdAt = Date.now();
 
-    const kotNoPromise = redisClient.INCR(`${payload.restaurantId}:kotCount`);
-    // const dateTime = DateTime.now().endOf("day").toUnixInteger();
-
-    const [kotNo] = await Promise.all([
-      kotNoPromise,
-      // redisClient.EXPIREAT(`${payload.restaurantId}:kotCount`, dateTime, "NX"),
-    ]);
-
-    await redis_create_Functions.createOrder({
-      createdAt,
-      kotId,
-      orderedBy: payload?.userId || "self",
-      restaurantId: payload.restaurantId,
-      sessionId,
-      tableNumber,
-      tableSectionId,
-      dishId,
-      fullQuantity: fullQuantity || 0,
-      halfQuantity: halfQuantity || 0,
-      orderId: constants.workerTokenGenerator(16),
-      size,
-      user_description,
-      chefAssign: "",
-    });
-
-    // const pushOrderToTableSessionPromis = redis_create_Functions.tableSession(
-    //   sessionId,
-    //   orderId,
-    // );
-
-    // const pushOrderToRestaurantContainerPromis =
-    //   redis_create_Functions.restaurantRealtimeOrdersContainer(
-    //     payload.restaurantId,
-    //     orderId,
-    //   );
-
-    // const createKotPromise = redis_create_Functions.kot(orderId, [
-    //   redisConstants.orderKey(orderId),
-    // ]);
-
-    // const pushKotToRestaurantContainerPromise =
-    //   redis_create_Functions.restaurantKotContainerPush(
-    //     payload.restaurantId,
-    //     redisConstants.kot_key(orderId),
-    //   );
+    const kotCount = await redisClient.INCR(`${payload.restaurantId}:kotCount`);
 
     try {
-      // const [
-      //   createOrder,
-      //   pushOrderToTableSession,
-      //   pushOrderToRestaurantContainer,
-      // ] = await Promise.all([
-      //   createOrderPromis,
-      //   pushOrderToTableSessionPromis,
-      //   pushOrderToRestaurantContainerPromis,
-      //   createKotPromise,
-      //   pushKotToRestaurantContainerPromise,
-      // ]);
+
+
+      await redis_create_Functions.createOrder({
+        createdAt,
+        kotId,
+        orderedBy: payload?.userId || "self",
+        restaurantId: payload.restaurantId,
+        sessionId,
+        tableNumber,
+        tableSectionId,
+        dishId,
+        fullQuantity: fullQuantity || 0,
+        halfQuantity: halfQuantity || 0,
+        orderId: constants.workerTokenGenerator(16),
+        size,
+        user_description,
+        chefAssign: "",
+        printCount: 0,
+        kotCount
+      });
+
 
       mqttPublish.dishOrder([
         {
@@ -133,6 +98,8 @@ export class OrdersService {
           size,
           user_description,
           chefAssign: "",
+          printCount: 0,
+          kotCount
         },
       ]);
 
@@ -292,148 +259,113 @@ export class OrdersService {
     return constants.OK;
   }
 
-/*   getOrder_logs(payload: JwtPayload_restaurantId) {
-    switch (payload.userType) {
-      case "Waiter":
-        return this.prisma.kotLog.findMany({
-          where: {
-            waiterId: payload.userId,
-          },
-          include: {
-            session: {
-              select: {
-                tableId: true,
-                tableNumber: true,
+  /*   getOrder_logs(payload: JwtPayload_restaurantId) {
+      switch (payload.userType) {
+        case "Waiter":
+          return this.prisma.kotLog.findMany({
+            where: {
+              waiterId: payload.userId,
+            },
+            include: {
+              session: {
+                select: {
+                  tableId: true,
+                  tableNumber: true,
+                },
               },
             },
-          },
-          orderBy: {
-            createdAt: "asc",
-          },
-        });
-
-      case "Chef":
-        return this.prisma.kotLog.findMany({
-          where: {
-            chefId: payload.userId,
-          },
-          include: {
-            session: {
-              select: {
-                tableId: true,
-                tableNumber: true,
+            orderBy: {
+              createdAt: "asc",
+            },
+          });
+  
+        case "Chef":
+          return this.prisma.kotLog.findMany({
+            where: {
+              chefId: payload.userId,
+            },
+            include: {
+              session: {
+                select: {
+                  tableId: true,
+                  tableNumber: true,
+                },
               },
             },
-          },
-          orderBy: {
-            createdAt: "asc",
-          },
-        });
-      default:
-        return this.prisma.kotLog.findMany({
-          where: {
-            restaurantId: payload.restaurantId,
-          },
-          include: {
-            KotOrder: true,
-            table: true,
-          },
-          orderBy: {
-            createdAt: "asc",
-          },
-        });
-    }
-  } */
+            orderBy: {
+              createdAt: "asc",
+            },
+          });
+        default:
+          return this.prisma.kotLog.findMany({
+            where: {
+              restaurantId: payload.restaurantId,
+            },
+            include: {
+              KotOrder: true,
+              table: true,
+            },
+            orderBy: {
+              createdAt: "asc",
+            },
+          });
+      }
+    } */
 
   async deleteOrder(dto: DeleteOrderDto) {
-    const { orderId, kotId } = dto;
+    const { orderId } = dto;
 
-    const kotDetail: any = await redisClient.json.GET(kotId);
-
-    if (!kotDetail) throw new NotFoundException();
-
-    const kotDetailType: KotCreation = kotDetail;
-
-    if (kotDetailType?.orders?.length === 1) {
-      await redisClient.json.DEL(kotId);
-      return constants.OK;
-    }
-
-    const deleteOrderIndex = kotDetailType?.orders?.findIndex(
-      (value) => value.orderId === orderId,
-    );
-
-    await redisClient.json.ARRPOP(kotId, "$.orders", deleteOrderIndex);
-
-    return constants.OK;
-
-    // const sessionOrders = await redisGetFunction.orderKeysArrayFromSessionUUID(
-    //   sessionId,
-    // );
-
-    // await redisClient.lRem(
-    //   redisConstants.sessionKey(sessionId),
-    //   1,
-    //   redisConstants.orderKey(orderId),
-    // );
-
-    // return constants.OK;
-
-    // console.log({ sessionOrders, orderId: redisConstants.orderKey(orderId) });
-  }
-  async updateOrder(dto: UpdateOrderDto) {
-    const { orderId, halfFull, kotId, newQuantity } = dto;
-
-    const data: any = await redisClient.json.GET(kotId);
-
-    if (!data) throw new NotFoundException();
-
-    const kotDetailType: KotCreation = data;
-
-    const orderIndex = kotDetailType?.orders?.findIndex(
-      (item) => item.orderId === orderId,
-    );
-
-    if (orderIndex === -1) throw new NotFoundException();
-
-    await redisClient.json.SET(
-      kotId,
-      `$.orders[${orderIndex}].${halfFull}`,
-      newQuantity,
-    );
-
-    return constants.OK;
-
-    /*   if (fullQuantity)
-      // const fullQuantityUpdate =
-      await redis_update_functions.updateOrderQuantity(
-        orderId,
-        "fullQuantity",
-        fullQuantity,
-      );
-
-    if (halfQuantity)
-      // const halfQuantityUpdate =
-      await redis_update_functions.updateOrderQuantity(
-        orderId,
-        "halfQuantity",
-        halfQuantity,
-      );
-
-    // await Promise.all([fullQuantityUpdatePromis, halfQuantityUpdatePromis]);
-
- */
-  }
-
-  async incrementPrintCount(kotId: KotId) {
-    const { kotId: kot_id } = kotId;
     try {
-      await redisClient.json.NUMINCRBY(kot_id, "$.printCount", 1);
+      await redisClient.del(redisConstants.orderKey(orderId));
 
       return constants.OK;
+
+
     } catch (error) {
       console.log(error);
       throw new InternalServerErrorException();
+    }
+
+  }
+  async updateOrder(dto: UpdateOrderDto) {
+    const { orderId, newFullQuantity, newHalfQuantity } = dto;
+
+    // if order not found throw error
+
+    const data = await redisGetFunction.getOrder(orderId)
+
+    if (!data) throw new NotFoundException()
+
+    if (parseInt(data.fullQuantity) === 0 && newFullQuantity !== 0) throw new ConflictException()
+
+    if (parseInt(data.halfQuantity) === 0 && newHalfQuantity !== 0) throw new ConflictException()
+
+
+
+    await redisClient.hSet(redisConstants.orderKey(orderId), ['fullQuantity', newFullQuantity, 'halfQuantity', newHalfQuantity])
+
+    return constants.OK
+  }
+  async printCountIncrement(kotId: Order['kotId']) {
+    const orders = (await redisClient.ft.search(redisConstants.restaurantOrderIndex, `@kotId:{${kotId}}`)).documents
+
+    const orderPrintCountIncrementPromise: Promise<number>[] = [];
+
+    for (const order of orders) {
+
+      const temp = redisClient.hIncrBy(order.id, 'printCount', 1)
+
+      orderPrintCountIncrementPromise.push(temp)
+
+    }
+
+    try {
+
+      await Promise.all(orderPrintCountIncrementPromise)
+    } catch (error) {
+
+      console.log(error)
+      throw new InternalServerErrorException()
     }
   }
 }

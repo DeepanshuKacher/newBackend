@@ -353,7 +353,7 @@ model RestaurantRevenue {
 
   dateTime DateTime? @default(now())
 
-  modeOfIncome ModeOfIncome?
+  modeOfIncome ModeOfIncome
 
   parcelRevenue Boolean? @default(false)
 }

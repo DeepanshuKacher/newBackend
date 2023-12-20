@@ -10,7 +10,7 @@ import {
   IsString,
   ValidateNested,
 } from "class-validator";
-import { DishSize } from "@prisma/client";
+import { DishSize, ModeOfIncome } from "@prisma/client";
 
 class Order {
   @IsMongoId()
@@ -39,4 +39,8 @@ export class CreateParcelDto {
   @ValidateNested({ each: true })
   @Type(() => Order)
   kotOrders: Order[];
+
+  @IsEnum(ModeOfIncome)
+  @IsNotEmpty()
+  modeOfIncome: ModeOfIncome
 }

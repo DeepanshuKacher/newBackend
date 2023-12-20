@@ -19,6 +19,7 @@ import { CreateSessionDto } from "./dto/create-session.dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { DateTime } from "luxon";
 import { Prisma } from "@prisma/client";
+import { DeleteSessionDto } from "./dto/delete-session.dto";
 
 @Injectable()
 export class SessionsService {
@@ -339,11 +340,11 @@ export class SessionsService {
     } */
 
   async clearSession(
-    createSessionDto: CreateSessionDto,
+    deleteSessionDto: DeleteSessionDto,
     payload: JwtPayload_restaurantId,
     sessionId: string,
   ) {
-    const { tableNumber, tableSectionId } = createSessionDto;
+    const { tableNumber, tableSectionId, modeOfIncome } = deleteSessionDto;
 
     const tableSessionIdFromTableInfo =
       await redisGetFunction.sessionIdFromTableInfo(
@@ -354,6 +355,11 @@ export class SessionsService {
 
     if (tableSessionIdFromTableInfo !== redisConstants.sessionKey(sessionId))
       throw new ConflictException("Invalid Session");
+
+    /*  all checks completed  */
+
+
+    /* below code is loading required data */
 
     let totalRevenue = 0;
 
@@ -377,15 +383,17 @@ export class SessionsService {
 
 
     const cartItemRedisKey: string[] = [];
-    (async () => {
-      const cartItems = (await redisGetFunction.getCartItemsFromSessionId(sessionId)).documents
-      cartItems.forEach(item => {
-        cartItemRedisKey.push(item.id)
-      })
-    })()
+    // (async () => {
+    const cartItems = (await redisGetFunction.getCartItemsFromSessionId(sessionId)).documents
 
 
+    cartItems.forEach(item => {
+      cartItemRedisKey.push(item.id)
+    })
+    // })()
 
+
+    /* all informatin is loaded now action performance code below */
 
 
     const getDishCost_Impure = (order: OrderReturnFromRedis, halfOrFull: 'half' | 'full') => {
@@ -411,31 +419,39 @@ export class SessionsService {
 
     const orderRedisKey: string[] = []
 
-    const dishDataCreateManyPromise = this.prisma.dishData.createMany({
-      data: jsonOrders.map(item => {
-        orderRedisKey.push(item.id)
-        return {
-          dishId: item.value.dishId,
-          fullQuantity: parseInt(item.value.fullQuantity),
-          halfQuantity: parseInt(item.value.halfQuantity),
-          dateOfOrder: new Date(parseInt(item.value.createdAt)),
+    let dishDataCreateManyPromise: Prisma.PrismaPromise<Prisma.BatchPayload> | undefined;
+
+    if (jsonOrders.length > 0) {
+      dishDataCreateManyPromise = this.prisma.dishData.createMany({
+        data: jsonOrders.map(item => {
+          orderRedisKey.push(item.id)
+          return {
+            dishId: item.value.dishId,
+            fullQuantity: parseInt(item?.value?.fullQuantity || '0'),
+            halfQuantity: parseInt(item?.value?.halfQuantity || '0'),
+            dateOfOrder: new Date(parseInt(item.value.createdAt)),
+            restaurantId: payload.restaurantId,
+            dishSize: item.value.size,
+            revenueFull: getDishCost_Impure(item.value, 'full'),
+            revenueHalf: getDishCost_Impure(item.value, 'half')
+          }
+        })
+      })
+    }
+
+
+
+
+    let createRestaurantRevenue;
+    if (totalRevenue > 0) {
+      createRestaurantRevenue = this.prisma.restaurantRevenue.create({
+        data: {
+          revenueGenerated: totalRevenue,
           restaurantId: payload.restaurantId,
-          dishSize: item.value.size,
-          revenueFull: getDishCost_Impure(item.value, 'full'),
-          revenueHalf: getDishCost_Impure(item.value, 'half')
+          modeOfIncome
         }
       })
-    })
-
-
-
-
-    const createRestaurantRevenue = this.prisma.restaurantRevenue.create({
-      data: {
-        revenueGenerated: totalRevenue,
-        restaurantId: payload.restaurantId
-      }
-    })
+    }
 
 
 
@@ -443,8 +459,20 @@ export class SessionsService {
 
     const removeTableStatus = redisClient.HDEL(redisConstants.tablesStatusKey(payload.restaurantId), redisConstants.tableSessionKeyForTablesStatus(tableSectionId, tableNumber))
 
-    await Promise.all([dishDataCreateManyPromise, createRestaurantRevenue, redisDeleteKey, removeTableStatus])
 
+    try {
+      await Promise.all([dishDataCreateManyPromise, createRestaurantRevenue, redisDeleteKey, removeTableStatus])
+
+      mqttPublish.sessionStartConfirmation(
+        payload.restaurantId,
+        tableSectionId,
+        tableNumber,
+        null,
+      );
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException()
+    }
 
   }
 

@@ -104,6 +104,7 @@ export class ParcelService {
           0,
         ),
         parcelRevenue: true,
+        modeOfIncome: createParcelDto.modeOfIncome,
       },
     });
 
@@ -141,6 +142,8 @@ export class ParcelService {
             chefAssign: "",
             user_description,
             size,
+            kotCount: kotNumber,
+            printCount: 1,
           };
         }),
       );

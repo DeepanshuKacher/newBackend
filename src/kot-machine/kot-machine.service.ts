@@ -1,12 +1,14 @@
-import { ForbiddenException, Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable, InternalServerErrorException } from "@nestjs/common";
 import type { Response, Request } from "express";
+import { Order } from "src/Interfaces";
 import { AuthService } from "src/auth/auth.service";
 import { UserType } from "src/auth/dto";
+import { redisClient, redisConstants } from "src/useFullItems";
 import { constants } from "src/useFullItems/constants";
 
 @Injectable()
 export class KotMachineService {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   login(response: Response, restaurantId: string) {
     // response.clearCookie(constants.restaurantId);
