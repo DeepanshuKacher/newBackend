@@ -1,6 +1,7 @@
 import { ConfigService } from "@nestjs/config";
 
 import * as mqtt from "mqtt";
+import { constants } from "../constants";
 
 const config = new ConfigService();
 
@@ -25,7 +26,7 @@ const client = mqtt.connect({
   port: parseInt(getConfigFunction("mqttport")),
   username: getConfigFunction("mqttUsername"),
   password: getConfigFunction("mqttPassword"),
-  clientId: getConfigFunction("mqttClientId"),
+  clientId: constants.workerTokenGenerator(5),
   protocol: "tcp",
 });
 
