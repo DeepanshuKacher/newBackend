@@ -141,7 +141,7 @@ export const redis_create_Functions = {
       halfQuantity,
       "user_description",
       user_description || "",
-      "kotNumber",
+      "kotCount",
       kotCount,
       "printCount",
       printCount

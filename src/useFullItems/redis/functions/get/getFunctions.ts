@@ -86,11 +86,6 @@ export const ordersKeyFromKotContainer = async (
   return await Promise.all(promisContainer); // sending order key array
 };
 
-
-
-
-
-
 export const getCartItemsFromSessionId = (sessionId: string): Promise<{
   total: number;
   documents: RetreveCartItemFromRedisIndex[];
@@ -114,3 +109,9 @@ export const getOrdersFromSessionId = (sessionId: string): Promise<{
 
   return temp
 }
+
+
+
+// export const getOrdersFromRestaurantId = (restaurantId)=>{
+//   const temp = redisClient.ft.search(redisConstants.restaurantOrderIndex,)
+// }

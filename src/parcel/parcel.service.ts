@@ -143,7 +143,7 @@ export class ParcelService {
             user_description,
             size,
             kotCount: kotNumber,
-            printCount: 1,
+            printCount: 0,
           };
         }),
       );

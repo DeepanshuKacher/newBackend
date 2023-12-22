@@ -177,7 +177,7 @@ export class CartService {
           completed,
           user_description,
           kotCount,
-          printCount: 1,
+          printCount: 0,
         });
       });
 
@@ -230,7 +230,7 @@ export class CartService {
             completed,
             user_description,
             kotCount,
-            printCount: 1,
+            printCount: 0,
           };
         }),
       );
