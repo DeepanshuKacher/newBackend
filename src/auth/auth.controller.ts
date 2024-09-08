@@ -1,15 +1,14 @@
-import { Body, Controller, Post, Redirect, Req, Res } from "@nestjs/common";
+import { Body, Controller, Get, Post, Req, Res } from "@nestjs/common";
 import { Public } from "src/decorators";
 import { AuthService } from "./auth.service";
 import { CreateOwnerDto, EmailDto, GetJwtDto, SignInDto } from "./dto";
 import { Request, Response } from "express";
-import { constants } from "src/useFullItems";
 import { ResetPasswordDto, ResetPasswordFinal } from "./dto/resetPassword.dto";
 
 @Public()
 @Controller("auth")
 export class AuthController {
-  constructor(private readonly authservice: AuthService) { }
+  constructor(private readonly authservice: AuthService) {}
 
   @Post("/jwt")
   getJwt(

@@ -21,32 +21,6 @@ client.on("connect", () => console.log("Redis is connected"));
 
 (async function () {
   try {
-    // await client.ft.create(
-    //   redisConstants.restaurantOrderIndex,
-    //   {
-    //     "$:kotId": {
-    //       type: SchemaFieldTypes.TAG,
-    //       AS: "kotId",
-    //     },
-    //     "$:restaurantId": { type: SchemaFieldTypes.TAG, AS: "restaurantId" },
-    //     // cart: { type: SchemaFieldTypes.NUMERIC },
-    //     "$:sessionId": {
-    //       type: SchemaFieldTypes.TAG,
-    //       AS: "sessionId",
-    //       CASESENSITIVE: true,
-    //     },
-    //     "$:createdAt": {
-    //       type: SchemaFieldTypes.NUMERIC,
-    //       SORTABLE: true,
-    //       AS: "createdAt",
-    //     },
-    //   },
-    //   {
-    //     ON: "HASH",
-    //     PREFIX: "kot",
-    //   },
-    // );
-
     await client.ft.create(
       redisConstants.restaurantOrderIndex,
       {

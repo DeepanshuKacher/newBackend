@@ -1,19 +1,10 @@
-import { HttpStatus, ValidationPipe } from "@nestjs/common";
+import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import * as cookieParser from "cookie-parser";
-import { redisClient } from "./useFullItems";
 import { constants, privateContstants } from "./useFullItems";
 
 async function bootstrap() {
-  // const dotenvKeys = await redisClient.HGETALL("dotenv");
-
-  // secretKeys("set", dotenvKeys);
-
-  // const jwtkeys = secretKeys("get")?.["DATABASE_URL"];
-
-  // console.log(jwtkeys);
-
   const app = await NestFactory.create(AppModule);
 
   if (constants.IS_PRODUCTION) {
